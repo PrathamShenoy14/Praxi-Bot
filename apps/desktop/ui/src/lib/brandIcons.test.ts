@@ -17,6 +17,15 @@ test('known brands use real simple-icons paths and official brand colors', () =>
   assert.ok(brandIcon('OpenAI').path.length > 1000);
 });
 
+test('the popular apps of the Apps grid have real marks, not monograms', () => {
+  for (const name of ['Stripe', 'Atlassian', 'Jira', 'Trello', 'Asana', 'HubSpot', 'Shopify', 'Dropbox', 'Zoom', 'Telegram', 'WhatsApp', 'Spotify', 'Airtable', 'Zendesk', 'Docker', 'Vercel', 'Supabase', 'Google Sheets', 'notion-remote']) {
+    const b = brandIcon(name);
+    assert.equal(b.known, true, name);
+    assert.ok(b.path.length > 20, name);
+    assert.equal(b.monogram, '', name);
+  }
+});
+
 test('unknown servers receive a deterministic colored monogram with safe empty fallback', () => {
   const first = brandIcon('My private server');
   assert.equal(first.known, false);
@@ -35,4 +44,18 @@ test('bare logos that would vanish on a surface follow the text colour', () => {
   assert.ok(hexLuminance('#808080') < hexLuminance('#ffffff'));
   assert.equal(brandIcon('openrouter').known, true);
   assert.equal(brandIcon('deepseek').known, true);
+});
+
+test('every CLI engine and the Anthropic API provider wear a real logo, never a letter fallback', async () => {
+  const { brandOf } = await import('./cliCards.ts');
+  const { providerBrand } = await import('./modelBrand.ts');
+  for (const id of ['claude', 'codex', 'opencode', 'agy', 'gemini']) {
+    for (const key of [brandOf(id), providerBrand(`cli:${id}`).company]) {
+      const b = brandIcon(key);
+      assert.equal(b.known, true, `${id} -> ${key}`);
+      assert.ok(b.path.length > 0 && b.monogram === '', `${id} -> ${key}`);
+    }
+  }
+  assert.equal(brandIcon(providerBrand('claude-code').company).name, 'Claude');
+  assert.equal(brandIcon(providerBrand('anthropic').company).name, 'Anthropic');
 });

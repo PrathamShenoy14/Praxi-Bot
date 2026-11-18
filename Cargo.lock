@@ -1329,6 +1329,7 @@ dependencies = [
  "cli-provider",
  "composio",
  "computer-target",
+ "connector-calendar",
  "connector-email",
  "daemon-api",
  "desktop-api",
@@ -1508,6 +1509,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ca0197aee26d1ae37445ee532fefce43251d24cc7c166799f4d46817f1d3973"
 dependencies = [
  "crossbeam-utils",
+]
+
+[[package]]
+name = "connector-calendar"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "quick-xml",
+ "reqwest 0.12.28",
+ "secret-store",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+ "tool-registry",
+ "url",
+ "uuid",
 ]
 
 [[package]]

@@ -13,12 +13,13 @@
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use agent_core::{ControlGate, ControlRequest};
 use async_trait::async_trait;
 use parking_lot::Mutex;
 use tokio::sync::{Notify, oneshot};
+use tokio::time::Instant;
 
 mod owned;
 pub use owned::{OwnedTakeover, ReleaseJournal};
@@ -590,7 +591,7 @@ mod tests {
         (out, published.load(Ordering::SeqCst), started.elapsed())
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn no_app_connected_is_a_no_op() {
         let hub = Arc::new(ControlHub::new(fast()));
         let (out, published, took) = gate(&hub, None).await;
@@ -599,7 +600,7 @@ mod tests {
         assert!(took < Duration::from_millis(40));
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn app_answers_proceed() {
         let hub = Arc::new(ControlHub::new(fast()));
         let _sub = hub.subscribe();
@@ -611,7 +612,7 @@ mod tests {
         assert!(hub.state.lock().pending.is_empty(), "request cleaned up");
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn app_answers_refuse_with_its_reason() {
         let hub = Arc::new(ControlHub::new(fast()));
         hub.put_state(ControlMode::BotDriving);
@@ -623,7 +624,7 @@ mod tests {
         assert_eq!(out.unwrap_err(), "stopped by user");
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn connected_but_unregistered_app_that_is_silent_proceeds_after_the_short_timeout() {
         let hub = Arc::new(ControlHub::new(fast()));
         let _sub = hub.subscribe();
@@ -634,7 +635,7 @@ mod tests {
         assert!(took < Duration::from_millis(190), "{took:?}");
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn registered_controller_that_is_silent_is_refused_after_the_long_timeout() {
         let hub = Arc::new(ControlHub::new(ControlConfig {
             heartbeat_ttl: Duration::from_secs(5),
@@ -648,7 +649,7 @@ mod tests {
         assert!(took >= Duration::from_millis(190), "{took:?}");
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn human_driving_and_paused_refuse_instantly_without_a_round_trip() {
         let hub = Arc::new(ControlHub::new(ControlConfig {
             heartbeat_ttl: Duration::from_secs(5),
@@ -668,7 +669,7 @@ mod tests {
         }
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn heartbeat_expires() {
         let hub = Arc::new(ControlHub::new(fast()));
         hub.put_state(ControlMode::HumanDriving);
@@ -677,7 +678,7 @@ mod tests {
             gate(&hub, None).await.0.is_err(),
             "refused while registered"
         );
-        tokio::time::sleep(Duration::from_millis(180)).await;
+        tokio::time::advance(Duration::from_millis(180)).await;
         assert!(hub.registration().is_none(), "expired after the ttl");
         let (out, published, _) = gate(&hub, None).await;
         assert!(
@@ -688,7 +689,7 @@ mod tests {
         assert_eq!(hub.latched(), None);
         // A pause still outlives the heartbeat (SEC-07).
         hub.put_state(ControlMode::Paused);
-        tokio::time::sleep(Duration::from_millis(180)).await;
+        tokio::time::advance(Duration::from_millis(180)).await;
         assert!(gate(&hub, None).await.0.is_err());
         assert_eq!(hub.release(), Some(ControlMode::Paused));
         assert!(
@@ -703,7 +704,7 @@ mod tests {
         );
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn a_proceed_is_overruled_when_the_human_took_the_wheel_meanwhile() {
         let hub = Arc::new(ControlHub::new(ControlConfig {
             heartbeat_ttl: Duration::from_secs(5),
@@ -730,11 +731,11 @@ mod tests {
         assert!(!hub.decide(Uuid::now_v7(), ControlVerdict::Proceed, None));
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn pause_survives_the_heartbeat_ttl_and_only_release_resumes() {
         let hub = Arc::new(ControlHub::new(fast()));
         hub.put_state(ControlMode::Paused);
-        tokio::time::sleep(Duration::from_millis(200)).await;
+        tokio::time::advance(Duration::from_millis(200)).await;
         assert!(hub.registration().is_none(), "heartbeat expired");
         let msg = gate(&hub, None).await.0.unwrap_err();
         assert!(msg.contains("paused"), "{msg}");
@@ -743,29 +744,29 @@ mod tests {
         assert!(gate(&hub, None).await.0.is_err());
         assert_eq!(hub.release(), Some(ControlMode::Paused));
         assert_eq!(hub.latched(), None);
-        tokio::time::sleep(Duration::from_millis(200)).await; // heartbeat expires
+        tokio::time::advance(Duration::from_millis(200)).await; // heartbeat expires
         assert!(gate(&hub, None).await.0.is_ok());
         assert_eq!(hub.release(), None, "second release is a no-op");
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn latched_pause_still_refuses_after_the_subscriber_is_dropped() {
         let hub = Arc::new(ControlHub::new(fast()));
         let sub = hub.subscribe();
         hub.put_state(ControlMode::Paused);
         drop(sub);
         assert!(!hub.app_connected());
-        tokio::time::sleep(Duration::from_millis(200)).await;
+        tokio::time::advance(Duration::from_millis(200)).await;
         let (out, published, _) = gate(&hub, None).await;
         assert!(out.unwrap_err().contains("paused"));
         assert_eq!(published, 0);
     }
 
-    #[tokio::test]
+    #[tokio::test(start_paused = true)]
     async fn only_an_explicit_release_clears_the_latch_no_heartbeat_does() {
         let hub = Arc::new(ControlHub::new(fast()));
         hub.put_state(ControlMode::Paused);
-        tokio::time::sleep(Duration::from_millis(200)).await;
+        tokio::time::advance(Duration::from_millis(200)).await;
         assert!(gate(&hub, None).await.0.is_err(), "timeout keeps the latch");
         // A reopened UI heartbeats idle / bot_driving: the pause stays.
         hub.put_state(ControlMode::Idle);
@@ -804,8 +805,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn a_stale_human_driving_file_heals_on_start_and_a_local_report_never_latches() {
+    #[tokio::test(start_paused = true)]
+    async fn a_stale_human_driving_file_heals_on_start_and_a_local_report_never_latches() {
         let d = tempfile::tempdir().unwrap();
         let f = d.path().join("control-latch.json");
         // The exact file from the owner's machine (ownerless human_driving, no releases).

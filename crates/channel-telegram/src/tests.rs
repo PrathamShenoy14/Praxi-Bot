@@ -3767,3 +3767,20 @@ async fn app_approval_sends_all_arguments_before_the_only_approval_buttons() {
         ["Approve once", "Deny"]
     );
 }
+
+#[test]
+fn voice_and_photo_messages_become_unsupported_not_dropped() {
+    let mut v = text_update(1, PAIRED_USER_ID, PAIRED_USER_ID, "x");
+    v["message"].as_object_mut().unwrap().remove("text");
+    v["message"]["voice"] = json!({"file_id": "f", "duration": 3});
+    let incoming = update(v.clone()).into_incoming().unwrap();
+    assert_eq!(
+        incoming.kind,
+        IncomingKind::Unsupported("voice message".into())
+    );
+    v["message"].as_object_mut().unwrap().remove("voice");
+    v["message"]["photo"] = json!([{"file_id": "p"}]);
+    v["message"]["caption"] = json!("look");
+    let incoming = update(v).into_incoming().unwrap();
+    assert_eq!(incoming.kind, IncomingKind::Unsupported("photo".into()));
+}

@@ -1,5 +1,5 @@
 /**
- * Message and step times in the chat (card 268): the per-message stamp, its
+ * Message and step times in the chat: the per-message stamp, its
  * hover / tooltip forms, the day separator and tool-step durations. Pure, so
  * the wording is tested without a browser. Times are local; the stored
  * millisecond timestamps are the daemon's, never invented here.
@@ -15,9 +15,15 @@ export function parseMessageTimes(v: unknown): MessageTimes {
   return v === "off" || v === "seconds" ? v : "minutes";
 }
 
-/** tr is always 24 h; other languages follow the OS locale. */
+/** tr and de are always 24 h; other languages follow the OS locale. */
 function clockLocale(lang: string): string | undefined {
-  return lang.toLowerCase().startsWith("tr") ? "tr-TR" : undefined;
+  const l = lang.toLowerCase();
+  return l.startsWith("tr") ? "tr-TR" : l.startsWith("de") ? "de-DE" : undefined;
+}
+
+function is24h(lang: string): boolean {
+  const l = lang.toLowerCase();
+  return l.startsWith("tr") || l.startsWith("de");
 }
 
 function clockOptions(lang: string, seconds: boolean): Intl.DateTimeFormatOptions {
@@ -25,7 +31,7 @@ function clockOptions(lang: string, seconds: boolean): Intl.DateTimeFormatOption
     hour: "2-digit",
     minute: "2-digit",
     ...(seconds ? { second: "2-digit" as const } : {}),
-    ...(lang.toLowerCase().startsWith("tr") ? { hourCycle: "h23" as const } : {})
+    ...(is24h(lang) ? { hourCycle: "h23" as const } : {})
   };
 }
 

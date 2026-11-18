@@ -40,7 +40,8 @@ inline buttons. Only Telegram accounts you pair can use it.
 | `bot channels telegram disable` | Turn the channel off (the token stays stored); takes effect at the next `bot serve` |
 
 In the chat with your bot: `/bots`, `/use <bot>`, `/stop`, `/status`. Any other
-text is sent to the selected bot.
+text is sent to the selected bot. Voice messages, photos and files are not
+read yet: the bot answers that it only understands text.
 
 ## Notes
 

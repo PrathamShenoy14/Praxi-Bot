@@ -89,6 +89,9 @@ impl InlineButton {
 pub enum IncomingKind {
     /// A text message or slash command (`/pair`, `/bots`, `/use`, `/stop`, `/status`).
     Text(String),
+    /// An attachment this channel cannot read yet (voice, photo, file ...); the
+    /// payload is its human label.
+    Unsupported(String),
     /// An inline button callback press.
     Callback {
         /// Telegram callback query id (used for `answerCallbackQuery`).

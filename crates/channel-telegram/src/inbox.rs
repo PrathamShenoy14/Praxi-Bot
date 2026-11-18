@@ -397,7 +397,9 @@ impl Inbox {
             .and_then(|incoming| {
                 matches!(
                     incoming.kind,
-                    IncomingKind::Text(_) | IncomingKind::Callback { .. }
+                    IncomingKind::Text(_)
+                        | IncomingKind::Unsupported(_)
+                        | IncomingKind::Callback { .. }
                 )
                 .then_some(incoming.chat.0)
             });

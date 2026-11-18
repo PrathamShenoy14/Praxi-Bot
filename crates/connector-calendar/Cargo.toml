@@ -1,0 +1,28 @@
+[package]
+name = "connector-calendar"
+description = "Calendar connector (CalDAV): list, create and delete events as permission-gated tools with secret-reference credentials."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+async-trait.workspace = true
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+quick-xml = "0.42"
+reqwest.workspace = true
+secret-store.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tool-registry = { path = "../tool-registry", version = "0.1.0" }
+url = "2"
+uuid.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time", "net", "io-util"] }

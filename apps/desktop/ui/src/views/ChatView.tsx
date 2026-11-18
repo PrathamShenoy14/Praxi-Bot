@@ -78,8 +78,12 @@ import {
   applyCompletion,
   detectTrigger,
   mentionHandle,
-  SLASH_COMMANDS
+  SLASH_COMMANDS,
+  APP_COMMAND_EVENT,
+  APP_COMMANDS,
+  appCommandFor
 } from "../lib/slash";
+import { FRESH, type HistoryNav, afterEdit, historyKey, userMessageTexts } from "../lib/composerHistory";
 import {
   newChatIdFromText,
   routeChip,
@@ -244,6 +248,9 @@ export function ChatView({
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
+  // Up / Down recall this chat's earlier messages; the draft is kept (lib/composerHistory).
+  const [nav, setNav] = useState<HistoryNav>(FRESH);
+  const pendingCaret = useRef<number | null>(null);
   const [mode, setMode] = useState<SendMode>("queue");
   const [sending, setSending] = useState(false);
   /** The run the daemon named for the message just sent, until the run list shows it. */
@@ -258,6 +265,7 @@ export function ChatView({
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [inputScroll, setInputScroll] = useState(0);
   // One colour source for mentions: the bot's own colour, for typed text and for sent messages alike.
+  const sentTexts = useMemo(() => userMessageTexts(messages), [messages]);
   const mentionBots = useMemo(() => bots.map((b) => ({ name: b.name, color: botView(b).color })), [bots]);
   const mentionParts = useMemo(() => splitMentions(text, mentionBots), [text, mentionBots]);
   const paintsMentions = mentionParts.some((p) => p.color);
@@ -272,6 +280,13 @@ export function ChatView({
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const stickToBottom = useRef(true);
   const [remember, setRemember] = useState<Record<string, RememberState>>({});
+  useEffect(() => {
+    const el = inputRef.current;
+    if (el && pendingCaret.current !== null) {
+      el.setSelectionRange(pendingCaret.current, pendingCaret.current);
+      pendingCaret.current = null;
+    }
+  }, [text]);
   useEffect(() => {
     const el = inputRef.current;
     if (el) {
@@ -536,7 +551,7 @@ export function ChatView({
       return [];
     }
     if (triggerKind === "slash") {
-      return rank(SLASH_COMMANDS, triggerQuery, (c) => ({
+      return rank([...SLASH_COMMANDS, ...APP_COMMANDS], triggerQuery, (c) => ({
         text: c.name,
         keywords: [t(c.i18nKey)]
       })).map((r) => ({
@@ -619,6 +634,13 @@ export function ChatView({
     if (!client || !body || sending) {
       return;
     }
+    // "/help", "/settings" ...: the app opens the place itself; nothing is sent to the bot.
+    const appCommand = appCommandFor(body);
+    if (appCommand) {
+      setText("");
+      window.dispatchEvent(new CustomEvent(APP_COMMAND_EVENT, { detail: appCommand.target }));
+      return;
+    }
     setSending(true);
     setError(null);
     setSendFailure(null);
@@ -647,6 +669,7 @@ export function ChatView({
         toast.show(t("chat.stopped"), "info");
       }
       setText("");
+      setNav(FRESH);
       scrollToEnd();
       await Promise.all([loadMessages(), refreshRuns()]);
     } catch (e) {
@@ -660,6 +683,28 @@ export function ChatView({
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!menuOpen) {
+      const recalled = historyKey(nav, sentTexts, {
+        key: e.key,
+        shift: e.shiftKey,
+        ctrl: e.ctrlKey,
+        meta: e.metaKey,
+        alt: e.altKey,
+        composing: e.nativeEvent.isComposing,
+        menuOpen,
+        text,
+        selStart: e.currentTarget.selectionStart,
+        selEnd: e.currentTarget.selectionEnd
+      });
+      if (recalled) {
+        e.preventDefault();
+        setNav(recalled.nav);
+        setText(recalled.text);
+        setCaret(recalled.caret);
+        pendingCaret.current = recalled.caret;
+        return;
+      }
+    }
     if (menuOpen && !e.nativeEvent.isComposing) {
       const n = menuItems.length;
       if (e.key === "ArrowDown") {
@@ -1315,6 +1360,7 @@ export function ChatView({
             }
             aria-label={t("chat.placeholder")}
             onChange={(e) => {
+              setNav((n) => afterEdit(n, e.target.value));
               setText(e.target.value);
               setCaret(e.target.selectionStart);
               setMenuIdx(0);

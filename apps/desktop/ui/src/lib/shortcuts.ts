@@ -28,6 +28,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: "exitLiveFocus", group: "global", labelKey: "help.exitLiveFocus", keys: "Shift+Esc", source: "lib/liveViewStage.ts" },
   { id: "send", group: "composer", labelKey: "help.send", keys: "@send", source: "lib/settingsPrefs.ts" },
   { id: "newline", group: "composer", labelKey: "help.newline", keys: "@newline", source: "lib/settingsPrefs.ts" },
+  { id: "recall", group: "composer", labelKey: "help.recall", keys: "Up / Down", source: "lib/composerHistory.ts" },
   { id: "menuMove", group: "composer", labelKey: "help.menuMove", keys: "Up / Down", source: "views/ChatView.tsx" },
   { id: "menuAccept", group: "composer", labelKey: "help.menuAccept", keys: "Enter / Tab", source: "views/ChatView.tsx" },
   { id: "menuDismiss", group: "composer", labelKey: "help.menuDismiss", keys: "Esc", source: "views/ChatView.tsx" },

@@ -79,7 +79,8 @@
       "title": "Language",
       "description": "Select the display language for the interface.",
       "en": "English",
-      "tr": "Türkçe"
+      "tr": "Türkçe",
+      "de": "Deutsch"
     },
     "hotkey": {
       "title": "Stop All Shortcut",
@@ -560,6 +561,11 @@
     "slash": {
       "new": "Start a new chat",
       "stop": "Stop the current run",
+      "help": "Open help and shortcuts",
+      "settings": "Open settings",
+      "models": "Open the AI models settings",
+      "apps": "Open apps",
+      "schedules": "Open schedules",
       "menu": "Commands",
       "mentionMenu": "Bots",
       "noMatch": "No match"
@@ -981,6 +987,22 @@
       "host_admin_forbidden": {
         "title": "This computer may not manage that server",
         "hint": "Only the owner's paired desktop can change the server's setup."
+      },
+      "terminal_unsupported": {
+        "title": "The terminal needs a Linux server",
+        "hint": "Only a Linux server can open a terminal here."
+      },
+      "terminal_start_failed": {
+        "title": "The terminal could not start",
+        "hint": "The server could not start a shell. Try again in a moment."
+      },
+      "terminal_busy": {
+        "title": "All terminals on the server are in use",
+        "hint": "Close another terminal on the server, then try again."
+      },
+      "terminal_gone": {
+        "title": "The terminal session ended",
+        "hint": "Open the terminal again."
       },
       "provider_endpoint": {
         "title": "The provider endpoint could not be found",
@@ -1482,6 +1504,7 @@
       "makeHome": "Make {{name}} my bots' home",
       "sync": "Sync my setup to {{name}}",
       "viewScreen": "View its screen",
+      "terminal": "Terminal on the server",
       "workHere": "Work on this computer for now",
       "backHome": "Back to {{name}}",
       "pcOn": "On · every action asks you here",
@@ -1686,6 +1709,7 @@
     "nextRun": "Next run",
     "lastRun": "Last run",
     "never": "Never",
+    "missed": "Missed while off",
     "payload": {
       "workflow": "Runs workflow {{name}}",
       "tool": "Calls tool {{name}}",
@@ -1800,6 +1824,7 @@
       "quarantined": "Quarantined"
     },
     "auth": {
+      "expiredToast": "The {{name}} sign-in was not finished within {{minutes}} minutes and was cancelled.",
       "pasteLabel": "Redirect address from the browser",
       "pasteSubmit": "Finish sign-in",
       "pasteHint": "If the browser runs on another computer and shows an error page after you sign in, copy that page's full address and paste it here.",
@@ -1896,6 +1921,21 @@
       "tokenHint": "These ask for a personal token you create yourself. Most services connect without one through Composio on the main screen.",
       "localTitle": "Local developer servers"
     },
+    "sheet": {
+      "title": "Connect {{name}}",
+      "progress": "Step {{current}} of {{total}}",
+      "login": "The sign-in page opened in your browser. Finish it there and {{name}} opens next by itself.",
+      "app": "Opening {{name}}'s own page…",
+      "opened": "{{name}}'s page is open in your browser. Allow access there; it shows up as Connected here.",
+      "timedOut": "The sign-in was not finished in time. Press Connect to start again.",
+      "cancelled": "Cancelled.",
+      "failed": {
+        "login_open": "The sign-in page could not be opened.",
+        "login_failed": "The sign-in did not finish. Try again.",
+        "app_link": "The page for {{name}} could not be prepared. Try again.",
+        "app_open": "The page for {{name}} could not be opened."
+      }
+    },
     "composio": {
       "title": "Composio",
       "getKey": "Open the Composio key page",
@@ -1987,6 +2027,7 @@
     "intro": "Handy shortcuts while the app is open.",
     "palette": "Command palette",
     "send": "Send message",
+    "recall": "Earlier messages of this chat (empty box or first line; Esc brings your draft back)",
     "stop": "Stop all bot runs",
     "settings": "Open settings",
     "closePanel": "Close the side panel",
@@ -2735,7 +2776,25 @@
       "version": "This app and {{name}} are on different versions. Update both to the same version."
     },
     "needsDesktop": "{{name}} has no desktop session, so there is no screen to show. To add one, run this on this computer:",
-    "needsPermission": "{{name}} has not allowed this computer to watch its screen. On the server, run:"
+    "pausedIdle": "Paused to save resources - click to resume",
+    "showScreen": "Show screen",
+    "screenListFailed": "{{name}}'s screen list could not be loaded. It will be tried again in a moment."
+  },
+  "terminal": {
+    "title": "Terminal - {{name}}",
+    "close": "Close the terminal",
+    "note": "This is a shell on the server, through the connection your app already has. It runs as the server's service user and can read the server's keys. It ends when you close this panel.",
+    "failed": "The terminal could not be opened.",
+    "ended": "The shell ended.",
+    "again": "Open again",
+    "runForMe": "Run it for me",
+    "runForMeHint": "Opens the terminal and types the command; you press Enter.",
+    "state": {
+      "starting": "Starting",
+      "live": "Connected",
+      "ended": "Ended",
+      "failed": "Not connected"
+    }
   },
   "knowledge": {
     "title": "Knowledge and shared brain",

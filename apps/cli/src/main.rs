@@ -1,5 +1,6 @@
 //! Command-line interface entry point for the Praxi-Bot agent (`bot`).
 
+mod calendar_host;
 mod channels;
 #[cfg(test)]
 mod channels_tests;

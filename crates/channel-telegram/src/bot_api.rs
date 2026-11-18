@@ -77,7 +77,11 @@ impl Update {
             if !is_private_chat_with(&msg.chat, &from) {
                 return None;
             }
-            let text = msg.text?;
+            let kind = match (msg.text, msg.media.label()) {
+                (Some(text), _) => IncomingKind::Text(text),
+                (None, Some(label)) => IncomingKind::Unsupported(label.to_owned()),
+                (None, None) => return None,
+            };
             let username = from.username.or(from.first_name);
             return Some(IncomingMessage {
                 update_id: self.update_id,
@@ -85,7 +89,7 @@ impl Update {
                 user_id: from.id,
                 username,
                 message_id: Some(msg.message_id),
-                kind: IncomingKind::Text(text),
+                kind,
             });
         }
         if let Some(cb) = self.callback_query {
@@ -132,6 +136,46 @@ pub struct TgMessage {
     /// UTF-8 text of the message, if it is a text message.
     #[serde(default)]
     pub text: Option<String>,
+    /// Which attachment kind the message carries (only presence is kept).
+    #[serde(flatten)]
+    pub media: TgMedia,
+}
+
+/// Presence markers for the attachment kinds this channel cannot read yet.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TgMedia {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    photo: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    voice: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    audio: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    video: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    video_note: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    document: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    sticker: Option<serde_json::Value>,
+}
+
+impl TgMedia {
+    /// Human label of the attachment, if the message carries one.
+    #[must_use]
+    pub fn label(&self) -> Option<&'static str> {
+        [
+            (&self.voice, "voice message"),
+            (&self.audio, "audio file"),
+            (&self.video_note, "video message"),
+            (&self.video, "video"),
+            (&self.photo, "photo"),
+            (&self.document, "file"),
+            (&self.sticker, "sticker"),
+        ]
+        .into_iter()
+        .find_map(|(v, label)| v.is_some().then_some(label))
+    }
 }
 
 /// A Telegram user or bot account.
@@ -490,6 +534,7 @@ impl BotApiClient {
                     kind: None,
                 },
                 text: Some(clamped),
+                media: TgMedia::default(),
             }),
             Err(e) => Err(e),
         }

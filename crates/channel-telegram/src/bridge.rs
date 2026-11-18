@@ -1178,7 +1178,7 @@ impl TelegramChannel {
             if self.inner.pairing.should_send_refusal(user_id) {
                 // Best effort: a failing refusal (blocked bot, 429) is never fatal.
                 match msg.kind {
-                    IncomingKind::Text(_) => {
+                    IncomingKind::Text(_) | IncomingKind::Unsupported(_) => {
                         let _ = self
                             .send_redacted(chat_id, UNPAIRED_REFUSAL_TEXT, None)
                             .await;
@@ -1198,6 +1198,15 @@ impl TelegramChannel {
         match msg.kind {
             IncomingKind::Text(text) => {
                 self.handle_paired_text(chat_id, &text, msg.update_id).await
+            }
+            IncomingKind::Unsupported(label) => {
+                self.send_redacted(
+                    chat_id,
+                    &format!("I can't read a {label} yet. Please send your request as text."),
+                    None,
+                )
+                .await?;
+                Ok(())
             }
             IncomingKind::Callback { query_id, data, .. } => {
                 self.handle_callback(chat_id, &query_id, &data, msg.update_id)
