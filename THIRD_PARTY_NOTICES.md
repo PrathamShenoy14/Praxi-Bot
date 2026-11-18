@@ -47,6 +47,15 @@ Adapted files carry the header `// Adapted from vercel-labs/agent-browser (Apach
 The "click at the box-model center" interaction approach in `crates/browser-cdp/src/actions.rs`
 follows the technique used by browser-harness (MIT License).
 
+## clap_complete and clap_mangen (MIT OR Apache-2.0)
+
+Praxi-Bot uses `clap_complete` to generate shell completion scripts and
+`clap_mangen` to generate manual pages. Both are dual-licensed under the MIT
+License or the Apache License, Version 2.0. The upstream source directories
+contain both license texts.
+[clap_complete](https://github.com/clap-rs/clap/tree/master/clap_complete),
+[clap_mangen](https://github.com/clap-rs/clap/tree/master/clap_mangen)
+
 ## Integration identification artwork (v4)
 
 OpenAI's blossom path is vendored from Simple Icons 15.0.0 (CC0):

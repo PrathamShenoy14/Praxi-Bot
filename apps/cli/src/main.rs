@@ -3,6 +3,7 @@
 mod channels;
 #[cfg(test)]
 mod channels_tests;
+mod cli_artifacts;
 mod client;
 mod commands;
 mod components_host;
@@ -85,6 +86,13 @@ struct Cli {
 #[derive(Subcommand)]
 #[allow(clippy::large_enum_variant)] // one-shot CLI args, built once
 enum Command {
+    /// Print a shell completion script to stdout.
+    Completions {
+        #[arg(value_enum)]
+        shell: clap_complete::Shell,
+    },
+    /// Generate section 1 man pages in the given directory.
+    ManPages { output_dir: PathBuf },
     /// Review local skills and explicitly trust reviewed content.
     Skills {
         #[command(subcommand)]
@@ -563,6 +571,11 @@ fn run() -> Result<()> {
         println!("Praxi-Bot. Run `bot setup` to get started, or `bot --help`.");
         return Ok(());
     };
+    match command {
+        Command::Completions { shell } => return Ok(cli_artifacts::completions(*shell)?),
+        Command::ManPages { output_dir } => return Ok(cli_artifacts::man_pages(output_dir)?),
+        _ => {}
+    }
     let data_dir = data_dir(&cli)?;
     let mut say = |s: &str| println!("{s}");
 
@@ -689,6 +702,8 @@ fn run() -> Result<()> {
             SecretsCmd::Delete { name } => commands::secrets_delete(store, name),
         },
         Command::Mcp { .. }
+        | Command::Completions { .. }
+        | Command::ManPages { .. }
         | Command::Skills { .. }
         | Command::Token { .. }
         | Command::Host { .. }

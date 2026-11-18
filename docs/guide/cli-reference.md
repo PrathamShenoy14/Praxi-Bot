@@ -163,6 +163,105 @@ Manage the e-mail accounts of the running daemon (see [email](email.md)). Change
 | `status` | Show whether the channel is configured, running, and how many users are paired |
 | `disable` | Turn the channel off (the token stays stored) |
 
+### `bot completions <SHELL>`
+
+Print a completion script to standard output for `bash`, `zsh`, `fish`,
+`powershell`, or `elvish`. After installing the script, open a new shell session,
+type `bot` followed by a space, and press Tab.
+
+#### Bash
+
+```bash
+mkdir -p "$HOME/.local/share/bot"
+bot completions bash > "$HOME/.local/share/bot/bot.bash"
+```
+
+Add this line to `~/.bashrc`. If you use a login shell, make sure your login
+profile sources `~/.bashrc`.
+
+```bash
+. "$HOME/.local/share/bot/bot.bash"
+```
+
+#### Zsh
+
+```zsh
+mkdir -p "$HOME/.zfunc"
+bot completions zsh > "$HOME/.zfunc/_bot"
+```
+
+Add `fpath=("$HOME/.zfunc" "${fpath[@]}")` to `~/.zshrc` before `compinit`
+runs. If your configuration does not yet initialize completions, add these
+lines after setting `fpath`.
+
+```zsh
+autoload -Uz compinit
+compinit
+```
+
+#### Fish
+
+Fish loads `bot.fish` on demand from its completions directory. If you set
+`XDG_CONFIG_HOME`, use `$XDG_CONFIG_HOME/fish/completions` in both commands.
+
+```fish
+mkdir -p ~/.config/fish/completions
+bot completions fish > ~/.config/fish/completions/bot.fish
+```
+
+#### PowerShell
+
+```powershell
+$profileDir = Split-Path -Parent $PROFILE
+New-Item -ItemType Directory -Force -Path $profileDir | Out-Null
+bot completions powershell | Set-Content -Encoding utf8 (Join-Path $profileDir 'bot-completions.ps1')
+```
+
+Open the file at `$PROFILE` in your editor, creating it if needed, and add this
+line.
+
+```powershell
+. (Join-Path (Split-Path -Parent $PROFILE) 'bot-completions.ps1')
+```
+
+#### Elvish
+
+```elvish
+bot completions elvish > ~/.bot-completions.elv
+```
+
+Add this line to your `rc.elv`. For its location, see the
+[Elvish startup file reference](https://elv.sh/ref/command.html#rc-file).
+
+```elvish
+eval (slurp < ~/.bot-completions.elv)
+```
+
+### `bot man-pages <OUTPUT_DIR>`
+
+Generate section 1 manual pages for `bot` and its visible subcommands, including
+nested commands. Command names are joined with hyphens, as in
+`bot-channels-telegram-setup.1`.
+
+```sh
+bot man-pages target/man
+man -l target/man/bot-channels-telegram-setup.1
+```
+
+On macOS, use `man ./target/man/bot-channels-telegram-setup.1` to preview the file.
+
+When building from source, run `cargo run -p cli -- man-pages target/man` from
+the repository root to generate the same pages. For a package, set `DESTDIR`
+to your staging directory and install the files under `usr/share/man/man1`.
+
+```sh
+install -d "${DESTDIR:?Set DESTDIR to the package staging directory}/usr/share/man/man1"
+install -m 0644 target/man/*.1 "$DESTDIR/usr/share/man/man1/"
+```
+
+Once the package is installed, open the pages with `man 1 bot` or
+`man 1 bot-channels-telegram-setup`.
+
 ## Other binaries
 
 - `bot-node`: the node-agent for controlling another machine (experimental, see
