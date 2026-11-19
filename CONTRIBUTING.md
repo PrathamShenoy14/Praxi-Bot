@@ -91,6 +91,8 @@ documented in [`docs/api/openapi.json`](docs/api/openapi.json).
   the UI are expected to build; reports and fixes are welcome (see the `platform: macos` label).
 - **Windows** is the best-supported desktop platform today (UI Automation backend, NSIS installer).
 
+Run `node scripts/check-prereqs.mjs` from the repository root to check your prerequisites before building.
+
 ### Build and run
 
 ```sh
