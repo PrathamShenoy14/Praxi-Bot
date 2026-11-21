@@ -12,6 +12,7 @@ on:
       - ".github/workflows/installer.yml"
       - ".github/workflows/linux-release.yml"
       - "scripts/install-linux.sh"
+      - "scripts/linux/tests/test-publish-linux-assets.sh"
       - "scripts/release/**"
       - "scripts/tests/test_check_release_version.py"
   workflow_dispatch:
@@ -31,6 +32,7 @@ on:
       - ".github/workflows/installer.yml"
       - ".github/workflows/linux-release.yml"
       - "scripts/install-linux.sh"
+      - "scripts/linux/tests/test-publish-linux-assets.sh"
       - "scripts/release/**"
       - "scripts/tests/test_check_release_version.py"
 
@@ -89,7 +91,7 @@ jobs:
           release = workflow.split("\n  release:\n", 1)[1]
           assert job_if("!cancelled() && needs.verify-tagged-release.result == 'success' && needs.plan.outputs.kind == 'final' && needs.plan.outputs.publish == 'true'") in release
           assert "needs.verify-tagged-release.result == 'success'" in release
-          assert "    needs: [plan, verify-tagged-release]" in release
+          assert "    needs: [plan, check-version, verify-tagged-release]" in release
           assert "    environment: release" in release
           attest = workflow.split("\n  attest:\n", 1)[1].split("\n  verify-tagged-release:\n", 1)[0]
           assert "    environment: release" in attest
@@ -104,11 +106,12 @@ jobs:
           assert "github.event.repository.fork" in pre and "refs/heads/main" in pre
           publish_pre = workflow.split("\n  publish-prerelease:\n", 1)[1].split("\n  release:\n", 1)[0]
           assert "environment:" not in publish_pre
-          assert "    needs: [plan, verify-tagged-release]" in publish_pre
+          assert "    needs: [plan, check-version, verify-tagged-release]" in publish_pre
           assert "needs.plan.outputs.kind == 'pre'" in publish_pre
           assert job_if("!cancelled() && needs.verify-tagged-release.result == 'success' && needs.plan.outputs.kind == 'pre' && needs.plan.outputs.publish == 'true' && github.repository == 'emreocell/Praxi-Bot'") in publish_pre
           assert "needs.verify-tagged-release.result == 'success'" in publish_pre
           assert "publish-linux-assets.sh" in publish_pre and "publish-linux-assets.sh" in release
+          assert "needs.check-version.outputs.previous_tag" in publish_pre and "needs.check-version.outputs.previous_tag" in release
           script = pathlib.Path("scripts/release/publish-linux-assets.sh").read_text()
           assert '--clobber' not in script and 'gh release edit' not in script and 'gh release delete' not in script
           # An existing release (the Windows installer is attached first) may gain the Linux assets,
@@ -119,6 +122,10 @@ jobs:
 
       - name: Release version checker tests
         run: python -B -m unittest discover -s scripts/tests -p test_check_release_version.py
+
+      - name: Release publisher tests
+        if: runner.os == 'Linux'
+        run: bash scripts/linux/tests/test-publish-linux-assets.sh
 
       - name: Audit release workflow
         if: runner.os == 'Linux'
@@ -435,6 +442,7 @@ jobs:
       contents: read
     outputs:
       checkout_ref: ${{ steps.check.outputs.commit || needs.plan.outputs.checkout_ref }}
+      previous_tag: ${{ steps.check.outputs.previous_tag }}
     steps:
       - name: Checkout workflow source and release tags
         if: needs.plan.outputs.tag != ''
@@ -461,6 +469,11 @@ jobs:
           fi
           python3 -B scripts/release/check_version.py --root "$source" "$TAG"
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          previous_tag="$(git describe --tags --abbrev=0 --always --match 'v[0-9]*' --exclude "$TAG" "$commit")"
+          # With no earlier tag, --always returns the commit ID.
+          if [[ "$previous_tag" == v* ]]; then
+            echo "previous_tag=$previous_tag" >> "$GITHUB_OUTPUT"
+          fi
 
   build:
     name: Build ${{ matrix.target }}
@@ -787,7 +800,7 @@ jobs:
 
   publish-prerelease:
     name: Publish pre-release assets
-    needs: [plan, verify-tagged-release]
+    needs: [plan, check-version, verify-tagged-release]
     # !cancelled() + an explicit result check: the implicit success() would also fail when the sibling
     # attest job (final-only or pre-only) was skipped. Verification must still have succeeded.
     if: ${{ !cancelled() && needs.verify-tagged-release.result == 'success' && needs.plan.outputs.kind == 'pre' && needs.plan.outputs.publish == 'true' && github.repository == 'emreocell/Praxi-Bot' }}
@@ -810,11 +823,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.plan.outputs.tag }}
-        run: bash scripts/release/publish-linux-assets.sh "$TAG"
+          PREVIOUS_TAG: ${{ needs.check-version.outputs.previous_tag }}
+        run: bash scripts/release/publish-linux-assets.sh "$TAG" "$PREVIOUS_TAG"
 
   release:
     name: Publish verified immutable release
-    needs: [plan, verify-tagged-release]
+    needs: [plan, check-version, verify-tagged-release]
     # See publish-prerelease: explicit verification result instead of the implicit success().
     if: ${{ !cancelled() && needs.verify-tagged-release.result == 'success' && needs.plan.outputs.kind == 'final' && needs.plan.outputs.publish == 'true' }}
     environment: release
@@ -837,4 +851,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.plan.outputs.tag }}
-        run: bash scripts/release/publish-linux-assets.sh "$TAG"
+          PREVIOUS_TAG: ${{ needs.check-version.outputs.previous_tag }}
+        run: bash scripts/release/publish-linux-assets.sh "$TAG" "$PREVIOUS_TAG"
