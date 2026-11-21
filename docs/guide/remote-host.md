@@ -15,7 +15,8 @@ reachable only from the machine itself.
 > **Releasing (maintainers).** A pre-release tag push publishes after
 > attestation and verification. A final release requires a manual dispatch
 > on the protected tag and approval of the `release` environment.
-> [Linux release workflow](release-linux.md) · [Release runbook](../contributing/releasing.md)
+> See the [Linux release workflow](release-linux.md) and the
+> [release runbook](../contributing/releasing.md).
 
 ## What you need
 
