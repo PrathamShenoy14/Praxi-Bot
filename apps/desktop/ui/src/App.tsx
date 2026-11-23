@@ -1,1322 +1,185 @@
-import { BellDot, BellRing, ChevronDown, FlaskConical, GripVertical, Star, LoaderCircle, MessageSquare, Monitor, Plus, Search, Server, ServerOff, Settings2 } from "lucide-react";
-import { unreadBotIds } from "./lib/unread";
-import { useReadState } from "./store/readStateStore";
-import { ApiError } from "./api/client";
-import type { UpdateChatInput } from "./api/types";
-import { isMockMode } from "./api/mockMode";
+YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíÛM<ñ:-jZ.¶›­–)Ş³V–×÷'B²&VÆÄF÷BÂ&VÆÅ&–ærÂ6†Wg&öäF÷vâÂfÆ6´6öæ–6ÂÂw&—fW'F–6ÂÂ7F"ÂÆöFW$6—&6ÆRÂÖW76vU7V&RÂÖöæ—F÷"ÂÇW2Â6V&6‚Â6W'fW"Â6W'fW$öfbÂ6WGF–æw3"Òg&öÒ&ÇV6–FR×&V7B#°¦–×÷'B²Vç&VD&÷D–G2Òg&öÒ"âöÆ–"÷Vç&VB#°¦–×÷'B²W6U&VE7FFRÒg&öÒ"â÷7F÷&R÷&VE7FFU7F÷&R#°¦–×÷'B²”W'&÷"Òg&öÒ"âö’ö6Æ–VçB#°¦–×÷'BG—R²'VâÂWFFT6†D–çWBÒg&öÒ"âö’÷G—W2#°¦–×÷'B²—4Öö6´ÖöFRÒg&öÒ"âö’öÖö6´ÖöFR#° ¦–×÷'B²g&vÖVçBÂW6T6ÆÆ&6²ÂW6TVffV7BÂW6TÆ–÷WDVffV7BÂW6TÖVÖòÂW6U&VbÂW6U7FFRÂG—R555&÷W'F–W2ÂG—R&V7DæöFRÒg&öÒ'&V7B#°¦–×÷'B²W6UG&ç6ÆF–öâÒg&öÒ'&V7BÖ“†æW‡B#°¦–×÷'B°¢&÷DfF"À¢'WGFöâÀ¢6&BÀ¢6–FV&"À¢6–FV&$fö÷FW"À¢6–FV&$†VFW"À¢6–FV&$—FVÒÀ¢6–FV&$Æ–÷WBÀ¢6–FV&%6V7F–öâÀ¢6–FUæVÂÀ¢—4Æ–v‡D6öÆ÷"À¢&W6öÇfUF†VÖRÀ§Òg&öÒ'V’#°¦–×÷'B7G–ÆW2g&öÒ"âôæÖöGVÆRæ772#°¦–×÷'B²5–ÆÂÒg&öÒ"âö6ö×öæVçG2ô5–ÆÂ#°¦–×÷'B²&÷EæVÂÒg&öÒ"âö6ö×öæVçG2ô&÷EæVÂ#°¦–×÷'B²v–æF÷t6öçG&öÇ2Òg&öÒ"âö6ö×öæVçG2õv–æF÷t6öçG&öÇ2#°¦–×÷'B²&W6—¦Tw&—Òg&öÒ"âö6ö×öæVçG2õ&W6—¦Tw&—#°¦–×÷'B²$ôET5Eô4ôäd”rÒg&öÒ"âö6öæf–r÷&öGV7B#°¦–×÷'B°¢—4Ö–æ•&–ÂÀ¢ÆöE6†VÆÄÆ–÷WBÀ¢f—E&–ÂÀ¢&–ÄgFW%7FWÀ¢6V&6…ÆâÀ¢dÄôEõBÀ¢—4fÆöE6†VÆÂÀ¢æVÄÖ‚À¢æVÅv–GF„g&öÕö–çFW"À¢&–ÅF–W"À¢&–Åv–GF„g&öÕö–çFW"À¢$”ÅôÔ‚À¢$”ÅôÔ”âÀ¢$”ÅôÔ”ä’À¢äTÅôÔ”âÀ¢6fU6†VÆÄÆ–÷WBÀ¢7FWæVÂÀ¢G—R6†VÆÄÆ–÷W@§Òg&öÒ"âöÆ–"÷6†VÆÄÆ–÷WB#°¦–×÷'B²W6TÖ7Òg&öÒ"â÷7FFR÷W6TÖ7#°¦–×÷'B²66÷VçDÖVçRÂG—R66÷VçD7F–öâÒg&öÒ"âö6ö×öæVçG2ô66÷VçDÖVçR#°¦–×÷'B²÷÷fW"Òg&öÒ"âö6ö×öæVçG2õ÷÷fW"#°¦–×÷'B²†VÇF„–æF–6F÷"Òg&öÒ"âö6ö×öæVçG2ô†VÇF„–æF–6F÷"#°¦–×÷'B²†VÇÖöFÂÒg&öÒ"âö6ö×öæVçG2ô†VÇÖöFÂ#°¦–×÷'B²v†G4æWtÖöFÂÒg&öÒ"âö6ö×öæVçG2õv†G4æWtÖöFÂ#°¦–×÷'B²æ÷FW4f÷"Âv†G4æWt7F–öâÂG—Rv†G4æWtf–ÆRÒg&öÒ"âöÆ–"÷v†G4æWr#°¦–×÷'Bv†G4æWtf–ÆRg&öÒ"â÷v†G2ÖæWræ§6öâ#°¦–×÷'B²vWEfW'6–öâÒg&öÒ$FW&’Ö2ö’ö#°¦–×÷'B²—4†VÇ¶W’Òg&öÒ"âöÆ–"÷6†÷'F7WG2#°¦–×÷'B²6†EF—FÆTÆ&VÂÒg&öÒ"âöÆ–"ö6†EF—FÆR#°¦–×÷'B²ô4ôÔÔäEôUdTåBÂG—R6öÖÖæEF&vWBÒg&öÒ"âöÆ–"÷6Æ6‚#°¦–×÷'B²VF—F÷%6V7F–öâÒg&öÒ"âöÆ–"ö&÷DVF—F÷"#°¦–×÷'B²$õEô4ôÄõ%2Â&÷Ef–WrÂG&gDg&öÔ&÷BÒg&öÒ"âöÆ–"ö&÷E&öf–ÆR#°¦–×÷'B²—4&÷D×WFVBÂ6WD&÷D×WFVBÒg&öÒ"âöÆ–"ö&÷D×WFR#°¦–×÷'B²Ö¶T&÷DÖ–âÒg&öÒ"âöÆ–"ö&÷D÷&FW"#°¦–×÷'B²f–ÇFW$&÷G2Òg&öÒ"âöÆ–"ö&÷E6V&6‚#°¦–×÷'B°¢&6´g&öÔ6†D÷Vç5æVÂÀ¢&÷D6†G2À¢&÷DF–Æötg&öÕ67&VVâÀ¢&÷DÆæF–æp§Òg&öÒ"âöÆ–"ö&÷DÆæF–ær#°¦–×÷'B²æW‡E&÷WFTgFW$6†DFVÆWFRÒg&öÒ"âöÆ–"ö6†DÖævR#°¦–×÷'B²æF—fTVæv–æTæÖRÒg&öÒ"âöÆ–"ö&÷DVæv–æR#°¦–×÷'B²vWDWF÷7F'BÂ6WDWF÷7F'BÒg&öÒ"âöÆ–"÷&÷f–FW'2#°¦–×÷'B²—5&ö6W76–æu'Vå7FFRÒg&öÒ"âöÆ–"÷'Vå7FFR#°¦–×÷'B²W6VD6öçG&öÄ&ææW"Òg&öÒ"âö6ö×öæVçG2õW6VD6öçG&öÄ&ææW"#°¦–×÷'B²'Vä&"Òg&öÒ"âö6ö×öæVçG2õ'Vä&"#°¦–×÷'B²'VåF–ÖVÆ–æTÖöFÂÒg&öÒ"âö6ö×öæVçG2õ'VåF–ÖVÆ–æTÖöFÂ#°¦–×÷'B²'Vä&$ÖöFVÂÒg&öÒ"âöÆ–"÷'Vä&"#°¦–×÷'B²Fö7E&÷f–FW"Òg&öÒ"âö6ö×öæVçG2õFö7B#°¦–×÷'B²6öçG&öÄ'&–FvT†÷7BÒg&öÒ"â÷7FFRô6öçG&öÄ'&–FvT†÷7B#°¦–×÷'B²&WVW7E7F÷Òg&öÒ"â÷7FFRö7F÷#°¦–×÷'B²—4æWvW$æF—fU6æ6†÷BÒg&öÒ"â÷7FFR÷7F÷7FGW2#°¦–×÷'B²7F÷7FGW4æ÷F–6RÒg&öÒ"âö6ö×öæVçG2õ7F÷7FGW4æ÷F–6R#°¦–×÷'B²Æ—fUf–Wu&÷f–FW"ÂW6TÆ—fUf–WrÒg&öÒ"â÷7FFRôÆ—fUf–Wt6öçFW‡B#°¦–×÷'B²‡VÖäG&—f–æt&ææW"Òg&öÒ"âö6ö×öæVçG2ô‡VÖäG&—f–æt&ææW"#°¦–×÷'B²Æ—fUf–WvW"Òg&öÒ"â÷f–Ww2ôÆ—fUf–WvW"#°¦–×÷'BG—R²Æ—fT6†E6Æ÷G2Òg&öÒ"â÷f–Ww2ôÆ—fUf–WvW$6†B#°¦–×÷'B²V&æ6Tg&öÕVW'’Â7—7FVÕ—$öbÒg&öÒ"âöÆ–"öV&æ6R#°¦–×÷'B²7&VFTFV&÷Væ6VBÒg&öÒ"âöÆ–"öFV&÷Væ6R#°¦–×÷'B²&6¶G&÷—47F—fRÂ5U5DôÕô$4´E$õÂäõô$4´E$õÒg&öÒ"âöÆ–"ö&6¶G&÷6FÆör#°¦–×÷'B²&6¶G&÷Â66VæT6öÆ÷'2Òg&öÒ"âö6ö×öæVçG2ô&6¶G&÷#°¦–×÷'B²vÆÇW"Òg&öÒ"âö6ö×öæVçG2õvÆÇW"#°¦–×÷'B²&W6öÇfUvÆÇW"ÂvÆÇW%66VæT–BÂtÄÅU%ôD”ÒÒg&öÒ"âöÆ–"÷vÆÇW"#°¦–×÷'B²W6TÇ”V&æ6RÒg&öÒ"â÷7FFR÷W6TÇ”V&æ6R#°¦–×÷'B²W6UæVÅ&W6W'fRÒg&öÒ"â÷7FFR÷W6UæVÅ&W6W'fR#°¦–×÷'B²W6Uf–Ww÷'Ev–GF‚Òg&öÒ"â÷7FFR÷W6Uf–Ww÷'Ev–GF‚#°¦–×÷'B²ÆWGFT†÷7BÂG—RÆWGFU67&VVâÒg&öÒ"â÷7FFRõÆWGFT†÷7B#°¦–×÷'B²F–vW7Dæ÷F–f–W"Òg&öÒ"â÷7FFRôF–vW7Dæ÷F–f–W"#°¦–×÷'B²6†VÆÄ'&–FvT†÷7BÒg&öÒ"â÷7FFRõ6†VÆÄ'&–FvT†÷7B#°¦–×÷'B²FE6¶–ÆÄÖöFÂÒg&öÒ"âö6ö×öæVçG2ôFE6¶–ÆÄÖöFÂ#°¦–×÷'B²W6UFö7BÒg&öÒ"âö6ö×öæVçG2õFö7B#°¦–×÷'B²7&VFT6†Df÷"ÂæWt6†Df–ÇW&TæVVG5Fö7BÒg&öÒ"âöÆ–"öæWt6†B#°¦–×÷'B²ÆVfTwV&E&÷f–FW"ÂW6TÆVfU&Vv—7G'’Òg&öÒ"â÷7FFRôÆVfTwV&B#°¦–×÷'B²6¶–ÆÇ4ÖöFÂÒg&öÒ"âö6ö×öæVçG2õ6¶–ÆÇ4ÖöFÂ#°¦–×÷'B²W6T&÷E6¶–ÆÇ2Òg&öÒ"â÷7FFR÷W6T&÷E6¶–ÆÇ2#°¦–×÷'B²&÷DVF—DÖöFÂÒg&öÒ"â÷f–Ww2ô&÷DVF—DÖöFÂ#°¦–×÷'B²&÷DV×G•f–WrÒg&öÒ"â÷f–Ww2ô&÷DV×G•f–Wr#°¦–×÷'B²W'&÷$æ÷F–6RÒg&öÒ"âö6ö×öæVçG2ôW'&÷$æ÷F–6R#°¦–×÷'B²7F'GW&ö&ÆVÒÒg&öÒ"âö6ö×öæVçG2õ7F'GW&ö&ÆVÒ#°¦–×÷'B²‡VÖå6W'f–6RÒg&öÒ"âöÆ–"ö‡VÖäW'&÷"#°¦–×÷'B²f–æ—6…6WGW†–çBÒg&öÒ"âö6ö×öæVçG2ôf–æ—6…6WGW†–çB#°¦–×÷'B²&÷E&öf–ÆTÖöFÂÒg&öÒ"â÷f–Ww2ô&÷E&öf–ÆTÖöFÂ#°¦–×÷'B²W6T&÷E&V÷&FW"Òg&öÒ"âö6ö×öæVçG2÷W6T&÷E&V÷&FW"#°¦–×÷'B²6WD&÷D÷&FW%6æ6†÷BÒg&öÒ"â÷7F÷&Rö&÷D÷&FW%7F÷&R#°¦–×÷'B²6ö×WFW%66÷UÆâÒg&öÒ"âöÆ–"ö†÷7E7FFR#°¦–×÷'B²6ö×WFW%–6¶W"Òg&öÒ"âö6ö×öæVçG2ô6ö×WFW%–6¶W"#°¦–×÷'B²6W'fW%FW&Ö–æÅ&÷f–FW"Òg&öÒ"â÷7FFRõ6W'fW%FW&Ö–æÄ6öçFW‡B#°¦–×÷'B²6ö×WFW%&WVW7DÖöFÂÒg&öÒ"âö6ö×öæVçG2ô6ö×WFW$66W72#°¦–×÷'B²†÷7DV×G•7FFRÒg&öÒ"âö6ö×öæVçG2ô†÷7DV×G•7FFR#°¦–×÷'B²†÷7E7FFT&ææW"Òg&öÒ"âö6ö×öæVçG2ô†÷7E7FFT&ææW"#°¦–×÷'B²6fTÖöFT&ææW"Òg&öÒ"âö6ö×öæVçG2õ6fTÖöFT&ææW"#°¦–×÷'B²öæ&ö&F–ætÆÆ÷vVBÒg&öÒ"âöÆ–"ö†÷7DÖöFR#°¦–×÷'B°¢FVÖöå&÷f–FW"À¢†÷7E6W76–öâÀ¢Äô4Åô4ôÕUDU"À¢W6TFVÖöà§Òg&öÒ"â÷7FFRôFVÖöä6öçFW‡B#°¦–×÷'B²6†Ef–WrÒg&öÒ"â÷f–Ww2ô6†Ef–Wr#°¦–×÷'B²æVVG5–÷Uf–WrÒg&öÒ"â÷f–Ww2ôæVVG5–÷Uf–Wr#°¦–×÷'B²æ÷F–f–6F–öä†—7F÷'•f–WrÒg&öÒ"â÷f–Ww2ôæ÷F–f–6F–öä†—7F÷'•f–Wr#°¦–×÷'B²Vç&VD6÷VçBÒg&öÒ"âöÆ–"öæ÷F–f–6F–öä†—7F÷'’#°¦–×÷'B²W6Tæ÷F–f–6F–öä†—7F÷'’Òg&öÒ"â÷7F÷&Röæ÷F–f–6F–öä†—7F÷'•7F÷&R#°¦–×÷'B²öæ&ö&F–æuf–WrÒg&öÒ"â÷f–Ww2ôöæ&ö&F–æuf–Wr#°¦–×÷'B²66†VGVÆW5f–WrÒg&öÒ"â÷f–Ww2õ66†VGVÆW5f–Wr#°¦–×÷'B²4ÖöFÂÒg&öÒ"â÷f–Ww2ô4ÖöFÂ#°¦–×÷'B²æWt&÷DÖöFÂÒg&öÒ"â÷f–Ww2ôæWt&÷DÖöFÂ#°¦–×÷'B²6WGF–æw4ÖöFÂÒg&öÒ"â÷f–Ww2õ6WGF–æw4ÖöFÂ#°¦–×÷'B²õTåô•õ4UED”äu5ôUdTåBÒg&öÒ"â÷7FFR÷W6T6Æ”Væv–æU&÷w2#°¦–×÷'B²õTåô$õEôÄ”Ô•E5ôUdTåBÒg&öÒ"âöÆ–"ö&÷DÆ–Ö—G2#°¦–×÷'BG—R²&÷DVF—F÷%6V7F–öâÒg&öÒ"âöÆ–"ö&÷DVF—F÷"#°¦–×÷'B²Væv–æT6öç6VçE&÷f–FW"Òg&öÒ"â÷7FFRôVæv–æT6öç6VçB#°¦–×÷'BG—R²6WGF–æw56V7F–öä–BÒg&öÒ"â÷f–Ww2÷6WGF–æw2÷G—W2#°¦–×÷'BG—R²6WGF–æw5vT–BÒg&öÒ"âöÆ–"÷6WGF–æw5vW2#°¦–×÷'B²vWD7W'&VçEv–æF÷rÒg&öÒ$FW&’Ö2ö’÷v–æF÷r#°¦–×÷'B²7&VFTFVWÆ–æ´F—7F6†W"Òg&öÒ"âöÆ–"öFVWÆ–æ·2#°¦–×÷'B²öäFVWÆ–æµVæF–ærÒg&öÒ"âöÆ–"÷6†VÆÂ#°¦–×÷'B²“†âÂG—R7W÷'FVDÆæwVvRÒg&öÒ"âö“†â#°¦–×÷'B°¢'&öF67E6WGF–æw5WFFVBÀ¢G—R6öçG&öÅ6æ6†÷BÀ¢f÷&ÖD¶W–&ö&DWfVçD4†÷F¶W’À¢vWD6öçG&öÅ7FFRÀ¢—5FW&•'VçF–ÖRÀ¢v—fT&6´6öçG&öÂÀ¢”ä•D”Åô4ôåE$ôÅõ4ä4„õBÀ¢ÖF6†W4†÷F¶W”WfVçBÀ¢W6T&÷E'VâÀ¢&W7VÖT&÷E'VâÀ¢6WE7F÷†÷F¶W’À¢6–×VÆFT&÷E'VâÀ¢7V'67&–&T÷fW&Æ”WfVçG2À¢F¶UF†Uv†VVÀ§Òg&öÒ"âö÷fW&Æ’öWfVçG2#°¦–×÷'B°¢G—R6WGF–æw2À¢DTdTÅEõ4UED”äu2À¢ÆöE6WGF–æw2À¢ÆöE6WGF–æw57–æ2À¢6fU6WGF–æw2À¢6†÷VÆD÷Väöæ&ö&F–ætöå7F'@§Òg&öÒ"â÷7F÷&R÷6WGF–æw57F÷&R#°¦–×÷'B²‡VÖäÆ–æRÒg&öÒ"âöÆ–"ö‡VÖäW'&÷"#° §G—R&÷WFRĞ¢Â²¶–æC¢&†öÖR"Ğ¢Â²¶–æC¢&öæ&ö&F–ær"Ğ¢ò¢¢&÷Bv—F†÷WBç’6†B–WC¢F†RV×G’7FFR‡F†W&R—2æò&÷BvR’â¢ğ¢Â²¶–æC¢&&÷B#²&÷D–C¢7G&–ærĞ¢Â²¶–æC¢&6†B#²6†D–C¢7G&–æs²&÷D–C¢7G&–æs²ÖW76vT–Có¢7G&–æs²§V×&WVW7D–Có¢çVÖ&W#²W‡FW&æÃó¢&ööÆVâĞ¢Â²¶–æC¢&æVVG2"Ğ¢Â²¶–æC¢&æ÷F–f–6F–öç2"Ğ¢Â²¶–æC¢'66†VGVÆW2"Ó° ¦gVæ7F–öâ6†VÆÂ‡²FVWÆ–æ·2Ó¢²FVWÆ–æ·3¢&WGW&åG—SÇG—Vöb7&VFTFVWÆ–æ´F—7F6†W#âÒ’°¢6öç7B²BÒÒW6UG&ç6ÆF–öâ‚“°¢6öç7B°¢†6RÀ¢W'&÷#¢FVÖöäW'&÷"À¢'Vç2À¢WfVçG2À¢&÷G2À¢6†G2À¢æVVG2À¢6öæâÀ¢6Æ–VçBÀ¢&Vg&W6„&÷G2À¢&Vg&W6„6†G2À¢&Vg&W6…'Vç2À¢VæF–æt6†D–G2À¢WFFT6†BÀ¢FVÆWFT6†BÀ¢&WG'’À¢&W7F'DFVÖöâÀ¢†öÖRÀ¢v÷&´Æö6Äæ÷rÀ¢†öÖU7FÆRÀ¢6W'f–6U&ö&ÆVÒÀ¢7F'GWÀ¢&WG'”–å6V6öæG2À¢7F—fT6ö×WFW$–BÀ¢†÷7E7FFRÀ¢–æ—F–Ä6ö×WFW"À¢—47F—fT6ö×WFW ¢ÒÒW6TFVÖöâ‚“°¢6öç7B²÷Våf–WvW"ÒÒW6TÆ—fUf–Wr‚“°¢6öç7B&VE7FFRÒW6U&VE7FFR†6Æ–VçCòæ&6UW&Âóò""“°¢6öç7BVç&VD&÷G2ÒW6TÖVÖò‚‚’ÓâVç&VD&÷D–G2†6†G2Â'Vç2ÂæVVG2Â&VE7FFR’Â¶6†G2Â'Vç2ÂæVVG2Â&VE7FFUÒ“°¢6öç7B·6WGF–æw2Â6WE6WGF–æw5ÒÒW6U7FFSÄ6WGF–æw3â‚‚’ÓâÆöE6WGF–æw57–æ2‚’óòDTdTÅEõ4UED”äu2“°¢6öç7B·&÷WFRÂ6WE&÷WFUÒÒW6U7FFSÅ&÷WFSâ‡²¶–æC¢&†öÖR"Ò“°¢6öç7B¶Æ–æ¶VE'VâÂ6WDÆ–æ¶VE'VåÒÒW6U7FFSÅ'VâÂçVÆÃâ†çVÆÂ“°¢6öç7B¶†öÖT6†E6Æ÷G2Â6WD†öÖT6†E6Æ÷G5ÒÒW6U7FFSÄÆ—fT6†E6Æ÷G2ÂçVÆÃâ†çVÆÂ“°¢6öç7B¶Æö6Ä6†E6Æ÷G2Â6WDÆö6Ä6†E6Æ÷G5ÒÒW6U7FFSÄÆ—fT6†E6Æ÷G2ÂçVÆÃâ†çVÆÂ“°¢òòWfW'’&÷WFR6†ævRvöW2F‡&÷Vv‚F†—2vFS¢&÷BF–Æörv—F‚Vç6fVBFF6·2f—'7BÂæBöæP¢òòF†B—26f–ær&Æö6·2—B…"3“RÂf–æF–ærB’âFòæ÷B6ÆÂ6WE&÷WFVF—&V7FÇ’VÇ6Wv†W&Rà¢6öç7BÆVfRÒW6TÆVfU&Vv—7G'’‚“°¢6öç7BvòÒ†æW‡C¢&÷WFR’Óâ°¢ÆVfRæGFV×B‚‚’Óâ6WE&÷WFR†æW‡B’“°¢Ó°¢6öç7BFö7BÒW6UFö7B‚“°¢òò6†G2Â&÷G2æB'Vç2&VÆöærFòöæR6ö×WFW#¢7v—F6†–ær6ö×WFW'27F'G2B†öÖRà¢6öç7BÆ7D6ö×WFW"ÒW6U&Vb†7F—fT6ö×WFW$–B“°¢W6TVffV7B‚‚’Óâ°¢–b†Æ7D6ö×WFW"æ7W'&VçBÓÒ7F—fT6ö×WFW$–B’°¢Æ7D6ö×WFW"æ7W'&VçBÒ7F—fT6ö×WFW$–C°¢6WE&÷WFR‡²¶–æC¢&†öÖR"Ò“°¢Ğ¢ÒÂ¶7F—fT6ö×WFW$–EÒ“°¢òòF†Rf—'7B×'Vâv—¦&B—2w&—GFVâf÷"F†—26ö×WFW"w2÷vâFVÖöã¢æWfW"v†–ÆR†÷7B—26VÆV7FVBà¢6öç7Böæ&ö&F–æt&Æö6¶VBÒöæ&ö&F–ætÆÆ÷vVB†7F—fT6ö×WFW$–B“°¢òòF†R&÷G2r6ö×WFW"†2æò&÷G2Fò6†÷r†æ÷B6WBW–WBÂ÷"æ÷Bç7vW&–ær“¢öæR6ÆÒ67&VVâÂæWfW"&Ææ²à¢6öç7B†÷7DV×G’Òöæ&ö&F–æt&Æö6¶VBbb†6RÓÓÒ'&VG’"bb&÷G2æÆVæwF‚ÓÓÒ°¢W6TVffV7B‚‚’Óâ°¢–b†öæ&ö&F–æt&Æö6¶VBbb&÷WFRæ¶–æBÓÓÒ&öæ&ö&F–ær"’°¢6WE&÷WFR‡²¶–æC¢&†öÖR"Ò“°¢Ğ¢ÒÂ¶öæ&ö&F–æt&Æö6¶VBÂ&÷WFRæ¶–æEÒ“°¢6öç7B¶6öçG&öÅ7FFRÂ6WD6öçG&öÅ7FFU&uÒÒW6U7FFSÄ6öçG&öÅ6æ6†÷Câ€¢”ä•D”Åô4ôåE$ôÅõ4ä4„õ@¢“°¢òòæF—fR6æ6†÷G2'&—fRg&öÒWfVçG2Â&VG2æB6öÖÖæB&WÆ–W2–âç’÷&FW# ¢òòÇ’öæÇ’æWvW"&Wf—6–öâ†f–ÆVB&VB†2æöæRæB—2–væ÷&VB’à¢6öç7B6WD6öçG&öÅ7FFRÒW6T6ÆÆ&6²‚‡6æ¢6öçG&öÅ6æ6†÷B’Óâ°¢6WD6öçG&öÅ7FFU&r‚‡&Wb’Óâ†—4æWvW$æF—fU6æ6†÷B‡&Wbç7FFU&WbóòÓÂ6æ’ò6æ¢&Wb’“°¢ÒÂµÒ“°¢6öç7B·&V6÷&F–æt†÷F¶W’Â6WE&V6÷&F–æt†÷F¶W•ÒÒW6U7FFSÆ&ööÆVãâ†fÇ6R“°¢6öç7B¶WF÷7F'DW'&÷"Â6WDWF÷7F'DW'&÷%ÒÒW6U7FFSÇ7G&–ærÂçVÆÃâ†çVÆÂ“°¢6öç7B·6WGF–æw4÷VâÂ6WE6WGF–æw4÷VåÒÒW6U7FFSÅ6WGF–æw56V7F–öä–BÂ6WGF–æw5vT–BÂçVÆÃâ€¢çVÆÀ¢“°¢6öç7B¶4÷VâÂ6WD4÷VåÒÒW6U7FFR†fÇ6R“°¢òòF†RÖöFVÂ–6¶W"w2$–ç7FÆÂÄ4Ä“â"&÷w2÷Vâ6WGF–æw2â’Âv†W&RF†R–ç7FÆÂfÆ÷rÆ—fW2à¢W6TVffV7B‚‚’Óâ°¢6öç7B÷VâÒ‚’Óâ6WE6WGF–æw4÷Vâ‚&’"“°¢v–æF÷ræFDWfVçDÆ—7FVæW"„õTåô•õ4UED”äu5ôUdTåBÂ÷Vâ“°¢&WGW&â‚’Óâv–æF÷rç&VÖ÷fTWfVçDÆ—7FVæW"„õTåô•õ4UED”äu5ôUdTåBÂ÷Vâ“°¢ÒÂµÒ“°¢6öç7B¶æWt&÷D÷VâÂ6WDæWt&÷D÷VåÒÒW6U7FFR†fÇ6R“°¢òòF†RF–Æöw2öb&÷B†6&B#CBÔ2“¢VF—BæB&öf–ÆR&WÆ6RF†RöÆBvW3²&FB6¶–ÆÂ"6à¢òò6—BöâF÷öbF†R6¶–ÆÇ2F–Æör÷"F†RVF—BF–Æörà¢6öç7B¶&÷DVF—D÷VâÂ6WD&÷DVF—D÷VåÒÒW6U7FFR†fÇ6R“°¢6öç7B¶&÷E&öf–ÆT÷VâÂ6WD&÷E&öf–ÆT÷VåÒÒW6U7FFR†fÇ6R“°¢6öç7B·6¶–ÆÇ4÷VâÂ6WE6¶–ÆÇ4÷VåÒÒW6U7FFR†fÇ6R“°¢6öç7B¶FE6¶–ÆÄ÷VâÂ6WDFE6¶–ÆÄ÷VåÒÒW6U7FFR†fÇ6R“°¢òò&Wf–Wr†öö·2†Öö6²ÖöFRöæÇ’“¢÷67&VVãÖ&÷Ff÷&Òg6V7F–öãÖÖöFVÇ6Â÷67&VVãÖFG6¶–ÆÂg7FWÖ–ç7FÆÆà¢6öç7B·&Wf–WuÒÒW6U7FFR‚‚’Óâ°¢6öç7BÒ—4Öö6´ÖöFR‚’bbG—Vöbv–æF÷rÓÒ'VæFVf–æVB"òæWrU$Å6V&6…&×2‡v–æF÷ræÆö6F–öâç6V&6‚’¢çVÆÃ°¢&WGW&â²6V7F–öã¢VF—F÷%6V7F–öâ‡òævWB‚'6V7F–öâ"’’Â–ç7FÆÅ7FW¢òævWB‚'7FW"’ÓÓÒ&–ç7FÆÂ"Ó°¢Ò“°¢òò%&—6RÆ–Ö—B"öâ7F÷VB'Vâ÷Vç2F†RVF—F÷"öâ—G2Æ–Ö—G26V7F–öâà¢6öç7B¶VF—E6V7F–öâÂ6WDVF—E6V7F–öåÒÒW6U7FFSÄ&÷DVF—F÷%6V7F–öâÂVæFVf–æVCâ‡&Wf–Wrç6V7F–öâ“°¢W6TVffV7B‚‚’Óâ°¢6öç7B÷VâÒ‚’Óâ°¢6WDVF—E6V7F–öâ‚&Æ–Ö—G2"“°¢6WD&÷DVF—D÷Vâ‡G'VR“°¢Ó°¢v–æF÷ræFDWfVçDÆ—7FVæW"„õTåô$õEôÄ”Ô•E5ôUdTåBÂ÷Vâ“°¢&WGW&â‚’Óâv–æF÷rç&VÖ÷fTWfVçDÆ—7FVæW"„õTåô$õEôÄ”Ô•E5ôUdTåBÂ÷Vâ“°¢ÒÂµÒ“°¢6öç7B¶æWt6†D'W7’Â6WDæWt6†D'W7•ÒÒW6U7FFR†fÇ6R“°¢6öç7B¶æWt6†DW'&÷"Â6WDæWt6†DW'&÷%ÒÒW6U7FFSÇ7G&–ærÂçVÆÃâ†çVÆÂ“°¢6öç7B¶&÷E6V&6‚Â6WD&÷E6V&6…ÒÒW6U7FFSÇ7G&–ærÂçVÆÃâ†çVÆÂ“°¢6öç7B²6W'fW'3¢6W'fW'2ÒÒW6TÖ7‡G'VR“°¢6öç7B¶†VÇ÷VâÂ6WD†VÇ÷VåÒÒW6U7FFR†fÇ6R“°¢6öç7B·6WGF–æw4ÆöFVBÂ6WE6WGF–æw4ÆöFVEÒÒW6U7FFR†fÇ6R“°¢6öç7B¶Æ–æ´÷væW%ÒÒW6U7FFR‚‚’Óâ‡·Ò’“°¢6öç7BÆ–æµ6W76–öâÒW6TÖVÖò‚‚’Óâ6Æ–VçBÓÓÒçVÆÂòçVÆÂ¢·ÒÂ¶6Æ–VçEÒ“°¢W6TÆ–÷WDVffV7B‚‚’Óâ‚’ÓâFVWÆ–æ·2æFWF6‚†Æ–æ´÷væW"’Â¶FVWÆ–æ·2ÂÆ–æ´÷væW%Ò“°¢W6TÆ–÷WDVffV7B‚‚’Óâ°¢–b‚—5FW&•'VçF–ÖR‚’’&WGW&ã°¢6öç7Bv—F–ærÒ6WGF–æw4ÆöFVBÇÂ–æ—F–Ä6ö×WFW"ÓÓÒ'v—F–ær"ÇÀ¢†–æ—F–Ä6ö×WFW"ÓÓÒ'&VG’"bb‡†6RÓÓÒ&6öææV7F–ær"ÇÂ†÷7E7FFSòæ¶–æBÓÓÒ&6öææV7F–ær"ÇÂ†6öæâbb6Æ–VçB’’“°¢6öç7BöffÆ–æRÒ–æ—F–Ä6ö×WFW"ÓÓÒ&öffÆ–æR"ÇÂ†6RÓÓÒ&W'&÷""ÇÂÆ–æµ6W76–öâÇÀ¢†÷7E7FFSòæ¶–æBÓÓÒ&öffÆ–æR"ÇÂ†÷7E7FFSòæ¶–æBÓÓÒ&æ÷E÷—&VB"ÇÀ¢††÷7E7FFSòæ¶–æBÓÓÒ'fW'6–öåöÖ—6ÖF6‚"bb†÷7E7FFRæ&Æö6¶–ær“°¢FVWÆ–æ·2çWFFR‡°¢÷væW#¢Æ–æ´÷væW"À¢6ö×WFW$–C¢–æ—F–Ä6ö×WFW"ÓÓÒ'&VG’"ò7F—fT6ö×WFW$–B¢çVÆÂÀ¢6VÆV7FVC¢‚’Óâ—47F—fT6ö×WFW"†7F—fT6ö×WFW$–B’À¢6öææV7F–öã¢v—F–ærò'v—F–ær"¢öffÆ–æRò&öffÆ–æR"¢°¢¶W“¢Æ–æµ6W76–öâÂ&Vg&W6„&÷G2Â&Vg&W6„6†G2Â&Vg&W6…'Vç0¢ÒÀ¢÷Vã¢†FW7F–æF–öâ’Óâ°¢–b‡6WGF–æw4÷VâÓÒçVÆÂÇÂæWt&÷D÷VâÇÂæWt6†D'W7’ÇÂVæF–æt6†D–G2ç6—¦Râ’&WGW&âfÇ6S°¢&WGW&âÆVfRæGFV×E6–ÆVçFÇ’‚‚’Óâ°¢–b†FW7F–æF–öâæ¶–æBÓÓÒ''Vâ"’°¢6WDÆ–æ¶VE'Vâ†FW7F–æF–öâç'Vâ“°¢ÒVÇ6R°¢6WDÆ–æ¶VE'Vâ†çVÆÂ“°¢6WE&÷WFR†FW7F–æF–öâæ¶–æBÓÓÒ&6†B"ò²ââæFW7F–æF–öâÂW‡FW&æÃ¢G'VRÒ¢FW7F–æF–öâ“°¢Ğ¢Ò’ÓÓÒ'vVçB#°¢ÒÀ¢fVVF&6³¢†f–ÇW&R’ÓâFö7Bç6†÷r‡B†FVWÆ–æ·2âG¶f–ÇW&WÖ’Â&FævW""¢Ò“°¢Ò“°¢6öç7B¶fW'6–öâÂ6WDfW'6–öåÒÒW6U7FFR‚""“°¢6öç7B·v†G4æWtFöæRÂ6WEv†G4æWtFöæUÒÒW6U7FFR†fÇ6R“°¢6öç7B¶Æ–÷WBÂ6WDÆ–÷WEÒÒW6U7FFSÅ6†VÆÄÆ–÷WCâ†ÆöE6†VÆÄÆ–÷WB“°¢6öç7B·æVÄ÷VâÂ6WEæVÄ÷VåÒÒW6U7FFR‚‚’Óâ°¢–b‚—4Öö6´ÖöFR‚’ÇÂG—Vöbv–æF÷rÓÓÒ'VæFVf–æVB"’°¢&WGW&âfÇ6S°¢Ğ¢6öç7BÒæWrU$Å6V&6…&×2‡v–æF÷ræÆö6F–öâç6V&6‚“°¢&WGW&âævWB‚&Çb"’ÓÓÒ'æVÂ"ÇÂævWB‚'æVÂ"’ÓÓÒ##°¢Ò“°¢6öç7Bf–Ww÷'Ev–GF‚ÒW6Uf–Ww÷'Ev–GF‚‚“°¢6öç7B6†—&VbÒW6U&VcÄ…DÔÄ'WGFöäVÆVÖVçBÂçVÆÃâ†çVÆÂ“°¢òò&VÖVÖ&W"F†R6öÇVÖâv–GF‡2†gFW"W6RÂ6òG&rw&—FW2öæ6R’à¢6öç7BÆ–÷WE&VbÒW6U&Vb†Æ–÷WB“°¢W6TVffV7B‚‚’Óâ°¢Æ–÷WE&Vbæ7W'&VçBÒÆ–÷WC°¢6öç7BF–ÖW"Ò6WEF–ÖV÷WB‚‚’Óâ6fU6†VÆÄÆ–÷WB†Æ–÷WB’Â#“°¢&WGW&â‚’Óâ6ÆV%F–ÖV÷WB‡F–ÖW"“°¢ÒÂ¶Æ–÷WEÒ“°¢W6TVffV7B‚‚’Óâ°¢6öç7BfÇW6‚Ò‚’Óâ6fU6†VÆÄÆ–÷WB†Æ–÷WE&Vbæ7W'&VçB“°¢v–æF÷ræFDWfVçDÆ—7FVæW"‚'vV†–FR"ÂfÇW6‚“°¢&WGW&â‚’Óâ°¢v–æF÷rç&VÖ÷fTWfVçDÆ—7FVæW"‚'vV†–FR"ÂfÇW6‚“°¢fÇW6‚‚“°¢Ó°¢ÒÂµÒ“°¢6öç7B6WE&–ÂÒW6T6ÆÆ&6²‚‡&–Ã¢çVÖ&W"’Óâ6WDÆ–÷WB‚†Â’Óâ†Âç&–ÂÓÓÒ&–ÂòÂ¢²ââæÂÂ&–ÂÒ’’ÂµÒ“°¢6öç7B6WEæVÅv–GF‚ÒW6T6ÆÆ&6²‚‡æVÃ¢çVÖ&W"’Óâ6WDÆ–÷WB‚†Â’Óâ†ÂçæVÂÓÓÒæVÂòÂ¢²ââæÂÂæVÂÒ’’ÂµÒ“°¢6öç7Bw&–EBÒ‚’Óâ†Fö7VÖVçBæFö7VÖVçDVÆVÖVçBæFF6WBæfÆöBÓÓÒ&öâ"òdÄôEõB¢“°¢W6TVffV7B‚‚’Óâ°¢ÆWBÖ÷VçFVBÒG'VS°¢fö–BÆöE6WGF–æw2‚’çF†Vâ†7–æ2†ÆöFVB’Óâ°¢–b‚Ö÷VçFVB’°¢&WGW&ã°¢Ğ¢6öç7B÷4WF÷7F'BÒv—BvWDWF÷7F'B‚’æ6F6‚‚‚’ÓâÆöFVBæWF÷7F'B“°¢–b‚Ö÷VçFVB’°¢&WGW&ã°¢Ğ¢6öç7B&×2ÒæWrU$Å6V&6…&×2‡v–æF÷ræÆö6F–öâç6V&6‚“°¢6öç7BÖö6²Ò—4Öö6´ÖöFR‚“°¢6öç7BÖW&vVC¢6WGF–æw2Ò²ââæÆöFVBÂWF÷7F'C¢÷4WF÷7F'BÀ¢âââ†Öö6²ò²öæ&ö&F–æt6ö×ÆWFVC¢G'VRÂÆæwVvS¢…²&Vâ"Â&FR%Ò26öç7B’æf–æB‚†Â’ÓâÂÓÓÒ&×2ævWB‚&Æær"’’óò‚'G""26öç7B’Ò¢·Ò’À¢Ó°¢–b†Öö6²’ö&¦V7Bæ76–vâ†ÖW&vVBÂV&æ6Tg&öÕVW'’‡&×2ÂÖW&vVB’“°¢–b†Öö6²’°¢6WE&÷WFR‡²¶–æC¢&6†B"Â6†D–C¢#33333332Ó3332ÓC332Óƒ332Ó333333333332"Â&÷D–C¢#ÓÓCÓƒÓ"Ò“°¢6öç7B67&VVâÒ&×2ævWB‚'67&VVâ"“°¢–b‡67&VVâÓÓÒ'6WGF–æw2"’6WE6WGF–æw4÷Vâ‚‡&×2ævWB‚'6V7F–öâ"’óò&vVæW&Â"’26WGF–æw56V7F–öä–B“°¢–b‡67&VVâÓÓÒ&2"’6WD4÷Vâ‡G'VR“°¢–b‡&×2ævWB‚'æVÂ"’ÓÓÒ#"’6WEæVÄ÷Vâ‡G'VR“°¢òò&Wf–Wr7FFRöbF†R'Vâ&#¢ö6öçG&öÃÖ&÷EöG&—f–æwÇW6VGÆ‡VÖåöG&—f–ævà¢6öç7B7FÂÒ&×2ævWB‚&6öçG&öÂ"“°¢–b†7FÂÓÓÒ&&÷EöG&—f–ær"ÇÂ7FÂÓÓÒ'W6VB"ÇÂ7FÂÓÓÒ&‡VÖåöG&—f–ær"’°¢6WD6öçG&öÅ7FFR‡°¢ââä”ä•D”Åô4ôåE$ôÅõ4ä4„õBÀ¢ÖöFS¢7FÂÀ¢7FFU&Wc¢À¢7F÷6W¢À¢&÷C¢²&÷D–C¢#ÓÓCÓƒÓ"Â&÷DæÖS¢$FÆ2"ÒÀ¢7W'&VçE7FW¢&×2ævWB‚&Æær"’ÓÓÒ&Vâ"ò$6ö×&–ær6÷W&6W2–âF†R'&÷w6W""¢$¶–æ¶Æ,KF&œK<KF¶,YüKÆY÷LK,K–÷" ¢Ò“°¢Ğ¢6öç7B&–Å&ÒÒçVÖ&W"‡&×2ævWB‚'&–Â"’“°¢–b‡&–Å&Òâ’6WDÆ–÷WB‚†Â’Óâ‡²ââæÂÂ&–Ã¢&–Å&ÒÂSò$”ÅôÔ”ä’¢ÖF‚æÖ–â…$”ÅôÔ‚Â&–Å&Ò’Ò’“°¢òò&Wf–Wr7FFW2öbF†R÷F†W"&÷WFW2†Öö6²ÖöFRöæÇ’’à¢6öç7BFÆ2Ò#ÓÓCÓƒÓ#°¢–b‡67&VVâÓÓÒ&öæ&ö&F–ær"’ÖW&vVBæöæ&ö&F–æt6ö×ÆWFVBÒfÇ6S°¢6öç7B&÷DF–ÆörÒ&÷DF–Æötg&öÕ67&VVâ‡67&VVâ“°¢–b†&÷DF–ÆörÓÓÒ&VF—B"’6WD&÷DVF—D÷Vâ‡G'VR“°¢–b†&÷DF–ÆörÓÓÒ'&öf–ÆR"’6WD&÷E&öf–ÆT÷Vâ‡G'VRŸ4óËh‘éì¶»§q«^uˆ›İYU[œ™XYJ_OÛ›İYU[œ™XYOÜÜ[ˆˆ[OÔÚYX˜\’][Oˆˆ[BˆÙš[\›İÊ›İË›İÙX\˜Ú
+K›X\
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
-import {
-  BotAvatar,
-  Button,
-  Card,
-  Sidebar,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarItem,
-  SidebarLayout,
-  SidebarSection,
-  SidePanel,
-  isLightColor,
-  resolveTheme,
-} from "ui";
-import styles from "./App.module.css";
-import { AppsPill } from "./components/AppsPill";
-import { BotPanel } from "./components/BotPanel";
-import { WindowControls } from "./components/WindowControls";
-import { ResizeGrip } from "./components/ResizeGrip";
-import { PRODUCT_CONFIG } from "./config/product";
-import {
-  isMiniRail,
-  loadShellLayout,
-  fitRail,
-  railAfterStep,
-  searchPlan,
-  FLOAT_PAD,
-  isFloatShell,
-  panelMax,
-  panelWidthFromPointer,
-  railTier,
-  railWidthFromPointer,
-  RAIL_MAX,
-  RAIL_MIN,
-  RAIL_MINI,
-  PANEL_MIN,
-  saveShellLayout,
-  stepPanel,
-  type ShellLayout
-} from "./lib/shellLayout";
-import { useMcp } from "./state/useMcp";
-import { AccountMenu, type AccountAction } from "./components/AccountMenu";
-import { Popover } from "./components/Popover";
-import { HealthIndicator } from "./components/HealthIndicator";
-import { HelpModal } from "./components/HelpModal";
-import { WhatsNewModal } from "./components/WhatsNewModal";
-import { notesFor, whatsNewAction, type WhatsNewFile } from "./lib/whatsNew";
-import whatsNewFile from "./whats-new.json";
-import { getVersion } from "@tauri-apps/api/app";
-import { isHelpKey } from "./lib/shortcuts";
-import { chatTitleLabel } from "./lib/chatTitle";
-import { APP_COMMAND_EVENT, type AppCommandTarget } from "./lib/slash";
-import { editorSection } from "./lib/botEditor";
-import { BOT_COLORS, botView, draftFromBot } from "./lib/botProfile";
-import { isBotMuted, setBotMuted } from "./lib/botMute";
-import { makeBotMain } from "./lib/botOrder";
-import { filterBots } from "./lib/botSearch";
-import {
-  backFromChatOpensPanel,
-  botChats,
-  botDialogFromScreen,
-  botLanding
-} from "./lib/botLanding";
-import { nextRouteAfterChatDelete } from "./lib/chatManage";
-import { nativeEngineName } from "./lib/botEngine";
-import { getAutostart, setAutostart } from "./lib/providers";
-import { isProcessingRunState } from "./lib/runState";
-import { PausedControlBanner } from "./components/PausedControlBanner";
-import { RunBar } from "./components/RunBar";
-import { runBarModel } from "./lib/runBar";
-import { ToastProvider } from "./components/Toast";
-import { ControlBridgeHost } from "./state/ControlBridgeHost";
-import { requestStop } from "./state/appStop";
-import { isNewerNativeSnapshot } from "./state/stopStatus";
-import { StopStatusNotice } from "./components/StopStatusNotice";
-import { LiveViewProvider, useLiveView } from "./state/LiveViewContext";
-import { HumanDrivingBanner } from "./components/HumanDrivingBanner";
-import { LiveViewer } from "./views/LiveViewer";
-import type { LiveChatSlots } from "./views/LiveViewerChat";
-import { appearanceFromQuery, systemPairOf } from "./lib/appearance";
-import { createDebounced } from "./lib/debounce";
-import { backdropIsActive, CUSTOM_BACKDROP, NO_BACKDROP } from "./lib/backdropCatalog";
-import { Backdrop, sceneColors } from "./components/Backdrop";
-import { Wallpaper } from "./components/Wallpaper";
-import { resolveWallpaper, wallpaperSceneId, WALLPAPER_DIM } from "./lib/wallpaper";
-import { useApplyAppearance } from "./state/useApplyAppearance";
-import { usePanelReserve } from "./state/usePanelReserve";
-import { useViewportWidth } from "./state/useViewportWidth";
-import { PaletteHost, type PaletteScreen } from "./state/PaletteHost";
-import { DigestNotifier } from "./state/DigestNotifier";
-import { ShellBridgeHost } from "./state/ShellBridgeHost";
-import { AddSkillModal } from "./components/AddSkillModal";
-import { useToast } from "./components/Toast";
-import { createChatFor, newChatFailureNeedsToast } from "./lib/newChat";
-import { LeaveGuardProvider, useLeaveRegistry } from "./state/LeaveGuard";
-import { SkillsModal } from "./components/SkillsModal";
-import { useBotSkills } from "./state/useBotSkills";
-import { BotEditModal } from "./views/BotEditModal";
-import { BotEmptyView } from "./views/BotEmptyView";
-import { ErrorNotice } from "./components/ErrorNotice";
-import { StartupProblem } from "./components/StartupProblem";
-import { humanService } from "./lib/humanError";
-import { FinishSetupHint } from "./components/FinishSetupHint";
-import { BotProfileModal } from "./views/BotProfileModal";
-import { useBotReorder } from "./components/useBotReorder";
-import { setBotOrderSnapshot } from "./store/botOrderStore";
-import { computerScopePlan } from "./lib/hostState";
-import { ComputerPicker } from "./components/ComputerPicker";
-import { ServerTerminalProvider } from "./state/ServerTerminalContext";
-import { ComputerRequestModal } from "./components/ComputerAccess";
-import { HostEmptyState } from "./components/HostEmptyState";
-import { HostStateBanner } from "./components/HostStateBanner";
-import { SafeModeBanner } from "./components/SafeModeBanner";
-import { onboardingAllowed } from "./lib/hostMode";
-import {
-  DaemonProvider,
-  HostSession,
-  LOCAL_COMPUTER,
-  useDaemon
-} from "./state/DaemonContext";
-import { ChatView } from "./views/ChatView";
-import { NeedsYouView } from "./views/NeedsYouView";
-import { NotificationHistoryView } from "./views/NotificationHistoryView";
-import { unreadCount } from "./lib/notificationHistory";
-import { useNotificationHistory } from "./store/notificationHistoryStore";
-import { OnboardingView } from "./views/OnboardingView";
-import { SchedulesView } from "./views/SchedulesView";
-import { AppsModal } from "./views/AppsModal";
-import { NewBotModal } from "./views/NewBotModal";
-import { SettingsModal } from "./views/SettingsModal";
-import { OPEN_AI_SETTINGS_EVENT } from "./state/useCliEngineRows";
-import { OPEN_BOT_LIMITS_EVENT } from "./lib/botLimits";
-import type { BotEditorSection } from "./lib/botEditor";
-import { EngineConsentProvider } from "./state/EngineConsent";
-import type { SettingsSectionId } from "./views/settings/types";
-import type { SettingsPageId } from "./lib/settingsPages";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { i18n, type SupportedLanguage } from "./i18n";
-import {
-  broadcastSettingsUpdated,
-  type ControlSnapshot,
-  formatKeyboardEventAsHotkey,
-  getControlState,
-  isTauriRuntime,
-  giveBackControl,
-  INITIAL_CONTROL_SNAPSHOT,
-  matchesHotkeyEvent,
-  pauseBotRun,
-  resumeBotRun,
-  setStopHotkey,
-  simulateBotRun,
-  subscribeOverlayEvents,
-  takeTheWheel
-} from "./overlay/events";
-import {
-  type AppSettings,
-  DEFAULT_SETTINGS,
-  loadSettings,
-  loadSettingsSync,
-  saveSettings,
-  shouldOpenOnboardingOnStart
-} from "./store/settingsStore";
-import { humanLine } from "./lib/humanError";
+›İ
+HOˆÂˆÛÛœİšY]ÈH›İšY]Ê›İ
+NÂˆÛÛœİ]\İH›İÚ]ÊÚ]Ë›İšY
+K™š[™
 
-type Route =
-  | { kind: "home" }
-  | { kind: "onboarding" }
-  /** A bot without any chat yet: the empty state (there is no bot page). */
-  | { kind: "bot"; botId: string }
-  | { kind: "chat"; chatId: string; botId: string; messageId?: string; jumpRequestId?: number }
-  | { kind: "needs" }
-  | { kind: "notifications" }
-  | { kind: "schedules" };
+ÊHOˆXË˜\˜Ú]™Y
+NÂˆÛÛœİÛÛ™šYÈH›İ˜ÛÛ™šYÈ\ÈÈ›İÎˆÈ™]šY]ÏÎˆİš[™ÎÈİ]OÎˆİš[™ÎÈ[œ™XYÎˆ›ÛÛX[ˆHNÂˆÛÛœİ]™HH[œË™š[™
+ˆOˆ‹˜›İÚYOOH›İšY	‰ˆ\Ô›ØÙ\ÜÚ[™Ô[”İ]J‹œİ]JJNÂˆÛÛœİİ]HH™YYËœÛÛYJˆOˆ‹˜›İYOOH›İšY
+H]™OËœİ]HOOHØZ][™×Ø\›İ˜[ˆÈØZ][™ËX\›İ˜[ˆˆ]™HÈÛÜšÚ[™Èˆˆ\Ó[ØÚÓ[ÙJ
+HÈÛÛ™šYË˜›İËœİ]HˆšYHÂˆÛÛœİ]˜]\”İ]HHİ]HOOH[šÚ[™Èˆİ]HOOHÛÜšÚ[™Èˆİ]HOOHØZ][™ËX\›İ˜[ˆİ]HOOH™\œ›ÜˆˆÈİ]HˆšYHÂˆÛÛœİ[™^H›İYËš[™^ÙŠ›İšY
+NÂˆÛÛœİØ[”™[Ü™\ˆH›İÙX\˜ÚOOH[›İÙX\˜ÚOOHˆÂˆÛÛœİ˜YÈH™[Ü™\‹™˜YÎÂˆÛÛœİ›ÜYÙHH˜YÈ	‰ˆ˜YËšYOOH›İšY	‰ˆ˜YË›İ™\ˆOOH[™^È
+˜YË›İ™\ˆ˜YË™œ›ÛHÈ˜™Y›Ü™Hˆˆ˜Y\ˆŠHˆ[™Yš[™YÂˆ™]\›ˆ]ˆÙ^O^Ø›İšYHÛ\ÜÓ˜[YO^Üİ[\Ë˜›İ›İßH]KY˜YÙÚ[™Ï^Ù˜YÏËšYOOH›İšYÈYHˆˆ[™Yš[™YH]KY›Ü^Ù›ÜYÙ_HË‹‹ŠØ[”™[Ü™\ˆÈ™[Ü™\‹œ›İÔ›ÜÊ›İšY
+HˆÈ™]KX›İZYˆ›İšYJ_O‚ˆÚYX˜\’][HÛ\ÜÓ˜[YO^Üİ[\Ëœ˜Z[][_HXİ]™O^Ü›İ]P›İYOOH›İšYH]O^İšY]Ë›˜[Y_H\šXK[X™[^ÛZ[šHÈšY]Ë›˜[YHˆ[™Yš[™YHÛÛXÚÏ^Ê
+HOˆÛÕĞ›İ
+›İšY
+_O‚ˆ›İ]˜]\ˆ›İ^İšY]ßHÚ^™OH›Yˆİ]O^Ø]˜]\”İ]_HXÛÜ˜]]™HÏ‚ˆ]ˆÛ\ÜÓ˜[YO^Ø	Üİ[\Ë˜›İY]_H	Üİ[\Ëœ˜Z[^XOÜ[ˆÛ\ÜÓ˜[YO^Üİ[\Ë˜›İ˜[Y_OÜ[ˆÛ\ÜÓ˜[YO^Üİ[\Ë˜›İ˜[YU^OİšY]Ë›˜[Y_OÜÜ[Ú[™^OOH	‰ˆ›İYË›[™İˆHÈÜ[ˆÛ\ÜÓ˜[YO^Üİ[\Ë›XZ[“X\šßH›ÛOHš[YÈˆ]O^İ
+œÚYX˜\‹›XZ[›İ[Š_H\šXK[X™[^İ
+œÚYX˜\‹›XZ[›İ[Š_Oİ\ˆ\šXKZY[HYHˆÏÜÜ[ˆˆ[OÜÜ[Ü[ˆÛ\ÜÓ˜[YO^Üİ[\Ë˜›İ›Û_OÊ\Ó[ØÚÓ[ÙJ
+HÈÛÛ™šYË˜›İËœ™]šY]Èˆ[™Yš[™Y
+HÏÈÚ]]SX™[
+]\İË]K
+˜›İË›™]ĞÚ]ŠJ_OÜÜ[Ù]‚ˆİ[œ™XY›İËš\Ê›İšY
+HÈÜ[ˆÛ\ÜÓ˜[YO^Üİ[\Ë[œ™XYİH›ÛOHš[YÈˆ\šXK[X™[^İ
+œÚYX˜\‹[œ™XY›İŠ_H]K]\İYH˜›İ][œ™XYˆÏˆˆ[BˆÔÚYX˜\’][O‚ˆØØ[”™[Ü™\ˆ	‰ˆ[Z[šH	‰ˆ›İYË›[™İˆHÈ]Ûˆ\OH˜]ÛˆˆÛ\ÜÓ˜[YO^Üİ[\Ë™Üš\H\šXK[X™[^İ
+œÚYX˜\‹œ™[Ü™\›İ‹È˜[YNˆšY]Ë›˜[YHJ_H]O^İ
+œÚYX˜\‹œ™[Ü™\’[Š_HË‹‹œ™[Ü™\‹™Üš\›ÜÊ›İšY
+_OÜš\™\XØ[\šXKZY[HYHˆÏØ]Ûˆˆ[BˆÙ]ÂˆJ_BˆÙ]‚ˆÔÚYX˜\”ÙXİ[Û‚‚ˆÚYX˜\‘›Ûİ\ˆÛ\ÜÓ˜[YO^Üİ[\Ëœ˜Z[›ÛİO‚ˆÚ[\Ü›Y]K™[‹‘Uˆ	‰ˆ™]ÈT“ÙX\˜Ú\˜[\ÊÚ[™İË›ØØ][Û‹œÙX\˜Ú
+K™Ù]
+™]ˆŠHOOHŒHˆÈ]Ûˆ˜\šX[H™ÚÜİˆÛÛXÚÏ^Ú[™TÚ[][]P›İ[ŸO›\ÚĞÛÛšXØ[ÏÛZ[šHÈ[ˆ
+™]‹œÚ[][]P›İ[ˆŠ_OĞ]Ûˆˆ[Bˆ]ˆÛ\ÜÓ˜[YO^Üİ[\Ë™›Ûİ›İßO‚ˆXØÛİ[Y[H˜[YO^ÜÙ][™ÜË˜XØÛİ[˜[Y_HÛÛ\]\•\™Ù]^ÜÙ][™ÜË˜ÛÛ\]\•\™Ù]HÛÛ\Xİ^ÛZ[š_HÛXİ[Û^Ú[™PXØÛİ[Xİ[ÛŸHÏ‚ˆ\Ô[ÛÛ›™XİY^Ø\Ù\™\œË™š[\ŠÈOˆËœİ]\ÈOOH˜ÛÛ›™XİYŠK›X\
+ÈOˆË›˜[YJ_HÛÛXÚÏ^Ê
+HOˆÙ]\ÓÜ[ŠYJ_HÏ‚ˆÙ]‚ˆÔÚYX˜\‘›Ûİ\‚ˆÔÚYX˜\‚ˆBˆ‚ˆ]ˆYH›XZ[‹XÛÛ[ˆX’[™^^ËL_HÛ\ÜÓ˜[YO^Üİ[\Ë›XZ[ÛÛ[[ŸO‚ˆ]ˆÛ\ÜÓ˜[YO^Üİ[\Ë]P˜\ŸH]K]]\šKY˜YË\™YÚ[Û‚ˆÜ[ˆÛ\ÜÓ˜[YO^Üİ[\Ëœ[[YSX™[H]K]]\šKY˜YË\™YÚ[Ûˆ]O^ÚÛYKšÚ[™OOHšÜİˆ	‰ˆ]ÛÜšÓØØ[›İÈÈÛYK›˜[YH
+˜ÛÛ\]\”XÚÙ\‹šÜİŠHˆ
+˜XØÛİ[›ØØ[ÛÛ\]\ˆŠ_OHÛ\ÜÓ˜[YO^Üİ[\Ë›]™QİH\šXKZY[HYHˆÏÚÛYKšÚ[™OOHšÜİˆ	‰ˆ]ÛÜšÓØØ[›İÈÈÙ\™\ˆÛ\ÜÓ˜[YO^Üİ[\Ëœ[[YRXÛÛŸH\šXKZY[HYHˆÏˆˆ[Ûš]ÜˆÛ\ÜÓ˜[YO^Üİ[\Ëœ[[YRXÛÛŸH\šXKZY[HYHˆÏŸOÜ[ˆÛ\ÜÓ˜[YO^Üİ[\Ëœ[[YS˜[Y_OÚÛYKšÚ[™OOHšÜİˆ	‰ˆ]ÛÜšÓØØ[›İÈÈÛYK›˜[YH
+˜ÛÛ\]\”XÚÙ\‹šÜİŠHˆ
+˜XØÛİ[›ØØ[ÛÛ\]\ˆŠ_OÜÜ[ÜÜ[‚ˆØ›İ[•šY]È	‰ˆ[™[›İšY]ÈÈ
+ˆ]Û‚ˆ™Y^ØÚ\™YŸBˆ\OH˜]Ûˆ‚ˆÛ\ÜÓ˜[YO^Üİ[\Ë˜›İÚ\Bˆ\šXKY^[™Y^Ü[™[š\ÚX›_Bˆ\šXKXÛÛ›ÛÏH˜›İ\[™[‚ˆ]O^İ
+˜›İ[™[ÙÙÛHŠ_Bˆ\šXK[X™[^Ø	Ü[™[›İšY]Ë›˜[Y_Nˆ	İ
+˜›İ[™[ÙÙÛHŠ_XBˆ]K]\İYH˜›İXÚ\‚ˆÛÛXÚÏ^İÙÙÛT[™[Bˆ‚ˆ›İ]˜]\ˆ›İ^Ü[™[›İšY]ßHÚ^™OHÈˆXÛÜ˜]]™HÏ‚ˆÜ[ˆÛ\ÜÓ˜[YO^Üİ[\Ë˜›İÚ\˜[Y_OÜ[™[›İšY]Ë›˜[Y_OÜÜ[‚ˆÚ]œ›Û‘İÛˆ\šXKZY[HYHˆÏ‚ˆØ]Û‚ˆ
+HˆÜ[ˆÏŸBˆ]ˆÛ\ÜÓ˜[YO^Üİ[\ËÚ[™İĞXİ[ÛœßH]K]]\šKY˜YË\™YÚ[Û‚ˆÛÛ\]\”XÚÙ\ˆÏ‚ˆ]ÛˆÛ\ÜÓ˜[YO^Üİ[\ËšXÛÛ]ÛŸH]O^İ
+˜XØÛİ[œÙ][™ÜÈŠ_H\šXK[X™[^İ
+˜XØÛİ[œÙ][™ÜÈŠ_HÛÛXÚÏ^Ê
+HOˆÙ]Ù][™ÜÓÜ[Š™Ù[™\˜[Š_OÙ][™ÜÌˆÏØ]Û‚ˆÙ]‚ˆÙ]‚ˆØXİ]™PÛÛ\]\’YOOHĞĞSĞÓÓTUTˆÈX[[™XØ]ÜˆÏˆˆ[BˆØY™S[ÙP˜[›™\ˆÏ‚ˆÜİİ]P˜[›™\ˆÏ‚ˆÚ[œšYÙRÜİˆÙ][™ÜÏ^ÜÙ][™ÜßBˆÛ“Ü[Ú]^ÛÜ[Ú]BˆÛ“Ü[“™YYÏ^ÛÜ[“™YYßBˆÏ‚ˆYÙ\İ›İYšY\‚ˆYÙ\İ[YO^ÜÙ][™ÜË™YÙ\İ[Y_BˆYÙ\İ\İ^O^ÜÙ][™ÜË™YÙ\İ\İ^_Bˆ]ZY]İ\œÏ^ÜÙ][™ÜËœ]ZY]İ\œßBˆ\Ôš]˜]O^ÜÙ][™ÜË››İYTš]˜]_BˆÛ’[™Y^Ê^JHOˆ\]TÙ][™ÜÊÈYÙ\İ\İ^Nˆ^HJ_BˆÏ‚ˆ[X[‘š]š[™Ğ˜[›™\ˆÏ‚ˆÜ[˜[›™\ŸBˆÜÙ][™ÜË›Û˜›Ø\™[™ÔÚÚ\Y	‰ˆ\Ù][™ÜË›Û˜›Ø\™[™ĞÛÛ\]Y	‰ˆ›İ]KšÚ[™OOH›Û˜›Ø\™[™ÈˆÈ
+ˆš[š\ÚÙ]\[ÛÛXÚÏ^Ê
+HOˆ[™SÜ[“Û˜›Ø\™[™Ê˜[ÙJ_HÏ‚ˆ
+Hˆ[BˆÜ[™[š\ÚX›H›İ]KšÚ[™OOH˜Ú]ˆÈ[ˆİÜİ]\Ó›İXÙH˜\šX[H›XZ[ˆˆÏŸBˆ]\ÙYÛÛ›Û˜[›™\ˆÏ‚ˆÜ›İ]KšÚ[™OOH›Û˜›Ø\™[™Èˆ	‰ˆ[Û˜›Ø\™[™Ğ›ØÚÙYÈ
+ˆÛ˜›Ø\™[™ÕšY]ÂˆÙ][™ÜÏ^ÜÙ][™ÜßBˆÛ“[™İXYÙPÚ[™ÙO^Ú[™S[™İXYÙPÚ[™Ù_BˆÛ’[^Ê
+HOˆÙ][Ü[ŠYJ_BˆÛ”ÚÚ\^Ê
+HOˆÂˆ\]TÙ][™ÜÊÈÛ˜›Ø\™[™ÔÚÚ\YˆYHJNÂˆÛÊÈÚ[™ˆšÛYHˆJNÂˆ_BˆÛÛÛ\]O^ÊÈ›İYJHOˆÂˆ\]TÙ][™ÜÊÈÛ˜›Ø\™[™ĞÛÛ\]YˆYKÛ˜›Ø\™[™ÔÚÚ\Yˆ˜[ÙHJNÂˆYˆ
+›İY
+HÂˆÛÊÈÚ[™ˆ˜›İ‹›İYJNÂˆH[ÙHÂˆÛÊÈÚ[™ˆšÛYHˆJNÂˆBˆ_BˆÏ‚ˆ
+Hˆ[BˆÚÜİ[\H	‰ˆ
+›İ]KšÚ[™OOHšÛYHˆ›İ]KšÚ[™OOH˜Ú]ˆ›İ]KšÚ[™OOH˜›İŠHÈ
+ˆÜİ[\Tİ]HÛ“™]Ğ›İ^Ê
+HOˆÙ]™]Ğ›İÜ[ŠYJ_HÛÛÛ›™Xİ[Ù[^Ê
+HOˆÙ]Ù][™ÜÓÜ[Š˜ZHŠ_HÏ‚ˆ
+Hˆ[BˆÜ›İ]KšÚ[™OOHšÛYHˆ	‰ˆZÜİ[\HÈ
+ˆ]ˆÛ\ÜÓ˜[YO^Üİ[\Ë˜Ù[\”[™_O‚ˆØ\™Y[™ÏH›ÈˆÛ\ÜÓ˜[YO^Üİ[\Ë™[\Tİ]PØ\™O‚ˆÜ\ÙHOOHœ™XYHˆ	‰ˆİ\\È
+ˆİ\\›Ø›[Hİ\\^Üİ\\H˜]Ï^ÙY[[Û‘\œ›ÜˆÏÈˆŸHÏ‚ˆ
+Hˆ\ÙHOOH™\œ›ÜˆˆÈ
+ˆ]ˆÛ\ÜÓ˜[YO^Üİ[\ËœÙ[XİY›İÛÛ[H]K]\İYH™Y[[Û‹[Ù™›[™KY[\K\İ]H‚ˆÜ[ˆÛ\ÜÓ˜[YO^Ø	Üİ[\Ëœİ]RXÛÛŸH	Üİ[\Ëœİ]RXÛÛ‘[™Ù\ŸXOÙ\™\“Ù™ˆÏÜÜ[‚ˆ\œ›Ü“›İXÙH\œ›Ü^Ú[X[”Ù\šXÙJÙ\šXÙT›Ø›[HÏÈ™İÛˆ‹Y[[Û‘\œ›ÜˆÏÈˆŠ_HÏ‚ˆÜ™]R[”ÙXÛÛ™ÈÈ
+ˆÛ\ÜÓ˜[YO^Üİ[\Ë™[\Tİ]Q\ØÜš\[ÛŸOİ
+™\œ›ÜœËœ™]Z[™È‹ÈÙXÛÛ™Îˆ™]R[”ÙXÛÛ™ÈJ_OÜ‚ˆ
+Hˆ[Bˆ]ˆÛ\ÜÓ˜[YO^Üİ[\Ë›Ü[Û”›İßO‚ˆ]Ûˆ˜\šX[Hœš[X\HˆÛÛXÚÏ^Ê
+HOˆ›ÚY™\İ\Y[[ÛŠ
+_O‚ˆİ
+™\œ›ÜœËœ™\İ\Ù\šXÙHŠ_BˆĞ]Û‚ˆ]Ûˆ˜\šX[HœÙXÛÛ™\HˆÛÛXÚÏ^Ü™]_O‚ˆİ
+›XZ[‹™Y[[Û”™]HŠ_BˆĞ]Û‚ˆ]Ûˆ˜\šX[HœÙXÛÛ™\HˆÛÛXÚÏ^Ê
+HOˆ[™SÜ[“Û˜›Ø\™[™Ê˜[ÙJ_O‚ˆİ
+›XZ[‹œ[”Ù]\Ú^˜\™Š_BˆĞ]Û‚ˆÙ]‚ˆÙ]‚ˆ
+Hˆ\ÙHOOH˜ÛÛ›™Xİ[™Èˆ	‰ˆ›İË›[™İOOHÈ
+ˆ]ˆÛ\ÜÓ˜[YO^Üİ[\ËœÙ[XİY›İÛÛ[O‚ˆÜ[ˆÛ\ÜÓ˜[YO^Üİ[\Ëœİ]RXÛÛŸOØY\Ú\˜ÛHÛ\ÜÓ˜[YO^Üİ[\ËœÜ[ŸHÏÜÜ[HÛ\ÜÓ˜[YO^Üİ[\Ë™[\Tİ]U]_O‚ˆİ
+›XZ[‹™Y[[ÛÛÛ›™Xİ[™Õ]HŠ_BˆÚO‚ˆÛ\ÜÓ˜[YO^Üİ[\Ë™[\Tİ]Q\ØÜš\[ÛŸO‚ˆİ
+›XZ[‹™Y[[ÛÛÛ›™Xİ[™Ñ\ØÜš\[ÛˆŠ_BˆÜ‚ˆ]Ûˆ˜\šX[HœÙXÛÛ™\HˆÛÛXÚÏ^Ü™]_O‚ˆİ
+›XZ[‹™Y[[Û”™]HŠ_BˆĞ]Û‚ˆÙ]‚ˆ
+Hˆ
+ˆ]‚ˆÛ\ÜÓ˜[YO^Üİ[\ËœÙ[XİY›İÛÛ[Bˆ]K]\İYHšÛYKY[\K\İ]H‚ˆ‚ˆY\ÜØYÙTÜ]X\™HÛ\ÜÓ˜[YO^Üİ[\Ë™[\RXÛÛŸHÏHÛ\ÜÓ˜[YO^Üİ[\Ë™[\Tİ]U]_O‚ˆØ›İË›[™İOOHˆÈ
+›XZ[‹Ù[ÛÛYU]HŠBˆˆ
+›XZ[‹œÙ[Xİ›İ]HŠ_BˆÚO‚ˆÛ\ÜÓ˜[YO^Üİ[\Ë™[\Tİ]Q\ØÜš\[ÛŸO‚ˆØ›İË›[™İOOHˆÈ
+›XZ[‹Ù[ÛÛYQ\ØÜš\[ÛˆŠBˆˆ
+›XZ[‹œÙ[Xİ›İ\ØÜš\[ÛˆŠ_BˆÜ‚ˆ]ˆÛ\ÜÓ˜[YO^Üİ[\Ë›Ü[Û”›İßO‚ˆØ›İË›[™İOOHÈ
+ˆ‚ˆ]Û‚ˆ˜\šX[Hœš[X\H‚ˆÛÛXÚÏ^Ê
+HOˆ[™SÜ[“Û˜›Ø\™[™Ê˜[ÙJ_Bˆ‚ˆİ
+›XZ[‹œ[”Ù]\Ú^˜\™Š_BˆĞ]Û‚ˆ]Û‚ˆ˜\šX[HœÙXÛÛ™\H‚ˆÛÛXÚÏ^Ê
+HOˆÙ]™]Ğ›İÜ[ŠYJ_Bˆ‚ˆ\ÈÏİ
+œÚYX˜\‹›™]Ğ›İŠ_BˆĞ]Û‚ˆ]Û‚ˆ˜\šX[H™ÚÜİ‚ˆÛÛXÚÏ^Ê
+HOˆ›ÚY™Yœ™\Ú›İÊ
+_Bˆ‚ˆİ
+›XZ[‹œ™Yœ™\Ú›İÈŠ_BˆĞ]Û‚ˆÏ‚ˆ
+Hˆ
+ˆ]Û‚ˆ˜\šX[Hœš[X\H‚ˆÛÛXÚÏ^Ê
+HOˆÙ]™]Ğ›İÜ[ŠYJ_Bˆ‚ˆ\ÈÏİ
+œÚYX˜\‹›™]Ğ›İŠ_BˆĞ]Û‚ˆ
+_BˆÙ]‚ˆÙ]‚ˆ
+_BˆĞØ\™‚ˆÙ]‚ˆ
+Hˆ[BˆÜ›İ]KšÚ[™OOH˜›İˆ	‰ˆZÜİ[\HÈ
+ˆ›İ[\UšY]ÂˆÙ^O^Ü›İ]K˜›İYBˆ›İ^Ü[™[›İšY]È	‰ˆÙ[XİY›İËšYOOH›İ]K˜›İYÈ[™[›İšY]Èˆ[™Yš[™YBˆ\ŞO^Û™]ĞÚ]\Ş_Bˆ\œ›Ü^Û™]ĞÚ]\œ›ÜŸBˆÛ“™]ĞÚ]^Ê
+HOˆ›ÚYİ\Ú]
+›İ]K˜›İY
+_BˆÛ”İYÙÙ\İ^Ê›Û\
+HOˆ›ÚYİ\Ú]Ú]
+›İ]K˜›İY›Û\
+_Bˆš\œİ›İ^Ø›İÖÌHÈÈYˆ›İÖÌKšY˜[YNˆ›İÖÌK›˜[YHHˆ[™Yš[™YBˆÛ‘ÛÑš\œİ^ÙÛÕĞ›İBˆÛÜ™X]P›İ^Ê
+HOˆÙ]™]Ğ›İÜ[ŠYJ_BˆÏ‚ˆ
+Hˆ[BˆÜ›İ]KšÚ[™OOH˜Ú]ˆ	‰ˆZÜİ[\HÈ
+ˆÚ]šY]ÂˆÙ^O^Ü›İ]K˜Ú]YBˆÚ]Y^Ü›İ]K˜Ú]YBˆ^\›˜[^Ü›İ]K™^\›˜[Bˆ[\Y\ÜØYÙRY^Ü›İ]K›Y\ÜØYÙRYBˆ[\™\]Y\İY^Ü›İ]Kš[\™\]Y\İYBˆÛ˜XÚÏ^Ê
+HOˆÂˆËÈ\™H\È›È›İYÙHÈÛÈ˜XÚÈÎˆHÚ]\İ]™\È[ˆHšYÚ[™[‚ˆYˆ
+˜XÚÑœ›ÛPÚ]Ü[œÔ[™[
+[™[Ü[ŠJHÙ][™[Ü[ŠYJNÂˆ_BˆÛÛ›Û^ØÛÛ›Ûİ]_BˆÛÛÛ›Û^ÜÙ]ÛÛ›Ûİ]_BˆÛ”İÚ]ÚÚ]^ÛÜ[Ú]BˆÚİĞYÙ[›İ]O^ÜÙ][™ÜËœÚİĞYÙ[›İ]_BˆÙ[™Ú]^ÜÙ][™ÜËœÙ[™Ú]BˆY\ÜØYÙU[Y\Ï^ÜÙ][™ÜË›Y\ÜØYÙU[Y\ßBˆ]™PÚ]ÛİÏ^ÛØØ[Ú]ÛİÈÏÈÛYPÚ]ÛİßBˆÏ‚ˆ
+Hˆ[BˆÜ›İ]KšÚ[™OOH›™YYÈˆÈ™YYÖ[İUšY]ÈÛ“Ü[Ú]^ÛÜ[Ú]HÏˆˆ[BˆÜ›İ]KšÚ[™OOH››İYšXØ][ÛœÈˆÈ›İYšXØ][Û’\İÜUšY]ÈÛ“Ü[Ú]^ÛÜ[Ú]HÛ“Ü[“™YYÏ^ÛÜ[“™YYßHÏˆˆ[BˆÜ›İ]KšÚ[™OOHœØÚY[\ÈˆÈ
+ˆØÚY[\ÕšY]ÈÛ“Ü[Ú]^ÛÜ[Ú]HÏ‚ˆ
+Hˆ[BˆÙ]‚ˆ[]RÜİˆİ\œ™[›İY^Ü›İ]P›İYBˆÛ”ØÜ™Y[^Ú[™T[]TØÜ™Y[ŸBˆÛ›İ^ÙÛÕĞ›İBˆÛÚ]^ÊÚ]Y›İY
+HOˆÛÊÈÚ[™ˆ˜Ú]‹Ú]Y›İYJ_BˆÛ”Ù][™ÜÔYÙO^ÊYÙJHOˆÙ]Ù][™ÜÓÜ[ŠYÙJ_BˆÛ’[^Ê
+HOˆÙ][Ü[ŠYJ_BˆÏ‚ˆÙ][™ÜÓ[Ù[ˆÜ[^ÜÙ][™ÜÓÜ[ˆOOH[Bˆ[š]X[ÙXİ[Û^ÜÙ][™ÜÓÜ[ˆÏÈ™Ù[™\˜[ŸBˆÛÛÜÙO^Ê
+HOˆÙ]Ù][™ÜÓÜ[Š[
+_BˆœšYÙO^ŞÂˆÙ][™ÜËˆ\]Nˆ\]TÙ][™ÜËˆ›İÛÛÜˆÙ[XİY›İÈ›İšY]ÊÙ[XİY›İ
+K˜ÛÛÜˆˆ[™Yš[™YˆÛ“[™İXYÙNˆ[™S[™İXYÙPÚ[™ÙKˆÛ•Ú[™İÑœ˜[YNˆ[™UÚ[™İÑœ˜[YPÚ[™ÙKˆ™XÛÜ™[™ÒİÙ^KˆÛ•ÙÙÛT™XÛÜ™İÙ^Nˆ
 
-function AppShell() {
-  const { t } = useTranslation();
-  const {
-    phase,
-    error: daemonError,
-    runs,
-    bots,
-    chats,
-    needs,
-    client,
-    refreshBots,
-    refreshChats,
-    pendingChatIds,
-    updateChat,
-    deleteChat,
-    retry,
-    restartDaemon,
-    home,
-    workLocalNow,
-    homeStale,
-    serviceProblem,
-    startup,
-    retryInSeconds,
-    activeComputerId
-  } = useDaemon();
-  const { openViewer } = useLiveView();
-  const readState = useReadState(client?.baseUrl ?? "");
-  const unreadBots = useMemo(() => unreadBotIds(chats, runs, needs, readState), [chats, runs, needs, readState]);
-  const [settings, setSettings] = useState<AppSettings>(() => loadSettingsSync() ?? DEFAULT_SETTINGS);
-  const [route, setRoute] = useState<Route>({ kind: "home" });
-  const [homeChatSlots, setHomeChatSlots] = useState<LiveChatSlots | null>(null);
-  const [localChatSlots, setLocalChatSlots] = useState<LiveChatSlots | null>(null);
-  // Every route change goes through this gate: a bot dialog with unsaved data asks first, and one
-  // that is saving blocks it (PR #95, finding 4).  Do not call `setRoute` directly elsewhere.
-  const leave = useLeaveRegistry();
-  const go = (next: Route) => {
-    leave.attempt(() => setRoute(next));
-  };
-  const toast = useToast();
-  // Chats, bots and runs belong to one computer: switching computers starts at home.
-  const lastComputer = useRef(activeComputerId);
-  useEffect(() => {
-    if (lastComputer.current !== activeComputerId) {
-      lastComputer.current = activeComputerId;
-      setRoute({ kind: "home" });
-    }
-  }, [activeComputerId]);
-  // The first-run wizard is written for this computer's own daemon: never while a host is selected.
-  const onboardingBlocked = !onboardingAllowed(activeComputerId);
-  // The bots' computer has no bots to show (not set up yet, or not answering): one calm screen, never a blank app.
-  const hostEmpty = onboardingBlocked && phase === "ready" && bots.length === 0;
-  useEffect(() => {
-    if (onboardingBlocked && route.kind === "onboarding") {
-      setRoute({ kind: "home" });
-    }
-  }, [onboardingBlocked, route.kind]);
-  const [controlState, setControlStateRaw] = useState<ControlSnapshot>(
-    INITIAL_CONTROL_SNAPSHOT
-  );
-  // Native snapshots arrive from events, reads and command replies in any order:
-  // apply only a newer revision (a failed read has none and is ignored).
-  const setControlState = useCallback((snap: ControlSnapshot) => {
-    setControlStateRaw((prev) => (isNewerNativeSnapshot(prev.stateRev ?? -1, snap) ? snap : prev));
-  }, []);
-  const [recordingHotkey, setRecordingHotkey] = useState<boolean>(false);
-  const [autostartError, setAutostartError] = useState<string | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState<SettingsSectionId | SettingsPageId | null>(
-    null
-  );
-  const [appsOpen, setAppsOpen] = useState(false);
-  // The model picker's "Install <CLI>" rows open Settings > AI, where the install flow lives.
-  useEffect(() => {
-    const open = () => setSettingsOpen("ai");
-    window.addEventListener(OPEN_AI_SETTINGS_EVENT, open);
-    return () => window.removeEventListener(OPEN_AI_SETTINGS_EVENT, open);
-  }, []);
-  const [newBotOpen, setNewBotOpen] = useState(false);
-  // The dialogs of a bot (card 244-C): edit and profile replace the old pages; "add skill" can
-  // sit on top of the skills dialog or the edit dialog.
-  const [botEditOpen, setBotEditOpen] = useState(false);
-  const [botProfileOpen, setBotProfileOpen] = useState(false);
-  const [skillsOpen, setSkillsOpen] = useState(false);
-  const [addSkillOpen, setAddSkillOpen] = useState(false);
-  // Review hooks (mock mode only): `?screen=botform&section=models`, `?screen=addskill&step=install`.
-  const [review] = useState(() => {
-    const q = isMockMode() && typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-    return { section: editorSection(q?.get("section")), installStep: q?.get("step") === "install" };
-  });
-  // "Raise limit" on a stopped run opens the editor on its Limits section.
-  const [editSection, setEditSection] = useState<BotEditorSection | undefined>(review.section);
-  useEffect(() => {
-    const open = () => {
-      setEditSection("limits");
-      setBotEditOpen(true);
-    };
-    window.addEventListener(OPEN_BOT_LIMITS_EVENT, open);
-    return () => window.removeEventListener(OPEN_BOT_LIMITS_EVENT, open);
-  }, []);
-  const [newChatBusy, setNewChatBusy] = useState(false);
-  const [newChatError, setNewChatError] = useState<string | null>(null);
-  const [botSearch, setBotSearch] = useState<string | null>(null);
-  const { servers: appServers } = useMcp(true);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
-  const [appVersion, setAppVersion] = useState("");
-  const [whatsNewDone, setWhatsNewDone] = useState(false);
-  const [layout, setLayout] = useState<ShellLayout>(loadShellLayout);
-  const [panelOpen, setPanelOpen] = useState(() => {
-    if (!isMockMode() || typeof window === "undefined") {
-      return false;
-    }
-    const q = new URLSearchParams(window.location.search);
-    return q.get("lv") === "panel" || q.get("panel") === "1";
-  });
-  const viewportWidth = useViewportWidth();
-  const chipRef = useRef<HTMLButtonElement | null>(null);
-  // Remember the column widths (after a pause, so a drag writes once).
-  const layoutRef = useRef(layout);
-  useEffect(() => {
-    layoutRef.current = layout;
-    const timer = setTimeout(() => saveShellLayout(layout), 200);
-    return () => clearTimeout(timer);
-  }, [layout]);
-  useEffect(() => {
-    const flush = () => saveShellLayout(layoutRef.current);
-    window.addEventListener("pagehide", flush);
-    return () => {
-      window.removeEventListener("pagehide", flush);
-      flush();
-    };
-  }, []);
-  const setRail = useCallback((rail: number) => setLayout((l) => (l.rail === rail ? l : { ...l, rail })), []);
-  const setPanelWidth = useCallback((panel: number) => setLayout((l) => (l.panel === panel ? l : { ...l, panel })), []);
-  const gridPad = () => (document.documentElement.dataset.float === "on" ? FLOAT_PAD : 0);
-  useEffect(() => {
-    let mounted = true;
-    void loadSettings().then(async (loaded) => {
-      if (!mounted) {
-        return;
-      }
-      const osAutostart = await getAutostart().catch(() => loaded.autostart);
-      if (!mounted) {
-        return;
-      }
-      const params = new URLSearchParams(window.location.search);
-      const mock = isMockMode();
-      const merged: AppSettings = { ...loaded, autostart: osAutostart,
-        ...(mock ? { onboardingCompleted: true, language: (["en", "de"] as const).find((l) => l === params.get("lang")) ?? ("tr" as const) } : {}),
-      };
-      if (mock) Object.assign(merged, appearanceFromQuery(params, merged));
-      if (mock) {
-        setRoute({ kind: "chat", chatId: "33333333-3333-4333-8333-333333333333", botId: "11111111-1111-4111-8111-111111111111" });
-        const screen = params.get("screen");
-        if (screen === "settings") setSettingsOpen((params.get("section") ?? "general") as SettingsSectionId);
-        if (screen === "apps") setAppsOpen(true);
-        if (params.get("panel") === "1") setPanelOpen(true);
-        // Review state of the run bar: `?control=bot_driving|paused|human_driving`.
-        const ctl = params.get("control");
-        if (ctl === "bot_driving" || ctl === "paused" || ctl === "human_driving") {
-          setControlState({
-            ...INITIAL_CONTROL_SNAPSHOT,
-            mode: ctl,
-            stateRev: 1,
-            stopSeq: 0,
-            bot: { botId: "11111111-1111-4111-8111-111111111111", botName: "Atlas" },
-            currentStep: params.get("lang") === "en" ? "Comparing sources in the browser" : "KaynaklarÄ± tarayÄ±cÄ±da karÅŸÄ±laÅŸtÄ±rÄ±yor"
-          });
-        }
-        const railParam = Number(params.get("rail"));
-        if (railParam > 0) setLayout((l) => ({ ...l, rail: railParam < 150 ? RAIL_MINI : Math.min(RAIL_MAX, railParam) }));
-        // Review states of the other routes (mock mode only).
-        const atlas = "11111111-1111-4111-8111-111111111111";
-        if (screen === "onboarding") merged.onboardingCompleted = false;
-        const botDialog = botDialogFromScreen(screen);
-        if (botDialog === "edit") setBotEditOpen(true);
-        if (botDialog === "profile") setBotProfileOpen(true);
-        if (botDialog === "skills") setSkillsOpen(true);
-        if (botDialog === "addSkill") setAddSkillOpen(true);
-        if (screen === "newbot") setNewBotOpen(true);
-        if (screen === "bot" || screen === "gone") setRoute({ kind: "bot", botId: screen === "gone" ? "00000000-0000-4000-8000-000000000000" : atlas });
-        if (screen === "schedules") setRoute({ kind: "schedules" });
-        if (screen === "needs") setRoute({ kind: "needs" });
-        if (screen === "home" || screen === "offline") setRoute({ kind: "home" });
-      }
-      setSettings(merged);
-      setSettingsLoaded(true);
-      if (shouldOpenOnboardingOnStart(merged)) {
-        setRoute({ kind: "onboarding" });
-      }
-      if (merged.language && merged.language !== i18n.language) {
-        void i18n.changeLanguage(merged.language);
-      }
-      if (merged.stopHotkey) {
-        void setStopHotkey(merged.stopHotkey)
-          .then((snap) => {
-            if (mounted) {
-              setControlState(snap);
-            }
-          })
-          .catch(() => {});
-      }
-    });
+HOˆÙ]™XÛÜ™[™ÒİÙ^J
+™]ŠHOˆ\™]ŠKˆÛ”İÜİÙ^Nˆ[™TİÜİÙ^PÚ[™ÙKˆÛ•ÙÙÛP]]Üİ\ˆ
 
-    void getControlState().then((snap) => {
-      if (mounted) {
-        setControlState(snap);
-      }
-    });
+HOˆ›ÚY[™UÙÙÛP]]Üİ\
 
-    return () => {
-      mounted = false;
-    };
-  }, [setControlState]);
+Kˆ]]Üİ\\œ›Ü‹ˆÛ“Ü[“Û˜›Ø\™[™Îˆ
+™\İ\
+HOˆÂˆÙ]Ù][™ÜÓÜ[Š[
+NÂˆ[™SÜ[“Û˜›Ø\™[™Ê™\İ\
+NÂˆBˆ_BˆÏ‚ˆ\Ó[Ù[Ü[^Ø\ÓÜ[ŸHÛÛÜÙO^Ê
+HOˆÙ]\ÓÜ[Š˜[ÙJ_HÏ‚ˆ™]Ğ›İ[Ù[ˆÜ[^Û™]Ğ›İÜ[ŸBˆÛÛÜÙO^Ê
+HOˆÙ]™]Ğ›İÜ[Š˜[ÙJ_BˆÛ‘Û™O^Ê›İY
+HOˆÂˆÙ]™]Ğ›İÜ[Š˜[ÙJNÂˆÛÕĞ›İ
+›İY
+NÂˆ_BˆÏ‚ˆ›İ›Ùš[S[Ù[ˆÜ[^Ø›İ›Ùš[SÜ[ˆ	‰ˆ›İ[•šY]ßBˆ›İ^ÜÙ[XİY›İBˆÚÚ[Ï^Ø›İÚÚ[ßBˆ™]ĞÚ]\ŞO^Û™]ĞÚ]\Ş_BˆÛÛÜÙO^Ê
+HOˆÙ]›İ›Ùš[SÜ[Š˜[ÙJ_BˆÛ‘Y]^Ê
+HOˆÂˆÙ]›İ›Ùš[SÜ[Š˜[ÙJNÂˆÙ]›İY]Ü[ŠYJNÂˆ_BˆÛ“™]ĞÚ]^Ê
+HOˆÂˆYˆ
+Ù[XİY›İ
+H›ÚYİ\Ú]
+Ù[XİY›İšY
+NÂˆ_BˆÏ‚ˆ›İY][Ù[ˆÜ[^Ø›İY]Ü[ˆ	‰ˆ›İ[•šY]ßBˆ›İ^ÜÙ[XİY›İBˆÚÚ[Ï^Ø›İÚÚ[ßBˆ[š]X[ÙXİ[Û^ÙY]ÙXİ[ÛŸBˆÛÛÜÙO^Ê
+HOˆÂˆÙ]›İY]Ü[Š˜[ÙJNÂˆÙ]Y]ÙXİ[ÛŠ™]šY]ËœÙXİ[ÛŠNÂˆ_BˆÛYÚÚ[^Ê
+HOˆÙ]YÚÚ[Ü[ŠYJ_BˆÛ‘[]Y^Ê
+HOˆÂˆÙ]›İY]Ü[Š˜[ÙJNÂˆÙ]›İ]JÈÚ[™ˆšÛYHˆJNÂˆ_BˆÏ‚ˆÚÚ[Ó[Ù[ˆÜ[^ÜÚÚ[ÓÜ[ˆ	‰ˆ›İ[•šY]ßBˆ›İ˜[YO^Ü[™[›İšY]ÏË›˜[YHÏÈˆŸBˆÚÚ[Ï^Ø›İÚÚ[ßBˆÛÛÜÙO^Ê
+HOˆÙ]ÚÚ[ÓÜ[Š˜[ÙJ_BˆÛYÚÚ[^Ê
+HOˆÙ]YÚÚ[Ü[ŠYJ_BˆÏ‚ˆYÚÚ[[Ù[ˆÜ[^ØYÚÚ[Ü[ˆ	‰ˆ›İ[•šY]ßBˆÛY[^ØÛY[Bˆ›İ˜[YO^Ü[™[›İšY]ÏË›˜[YHÏÈˆŸBˆÚÚ[Ï^Ø›İÚÚ[ßBˆ[š]X[İ\^Ü™]šY]Ëš[œİ[İ\Èš[œİ[ˆˆ[™Yš[™YBˆÛÛÜÙO^Ê
+HOˆÙ]YÚÚ[Ü[Š˜[ÙJ_BˆÏ‚ˆÚ]Ó™]Ó[Ù[›İ\Ï^ÜÚİÕÚ]Ó™]ÈÈÚ]Ó™]Ó›İ\Èˆ[HÛÛÜÙO^Ü™XÛÜ™Ú]Ó™]ßHÏ‚ˆ[•[Y[[™S[Ù[ˆ[^Û[šÙY[ˆÈ]™[Ëœ[œÖÛ[šÙY[‹šYHÏÈ[ˆ[Bˆ˜[˜XÚÏ^Û[šÙY[ˆÈ[œË™š[™
 
-  useEffect(() => {
-    return subscribeOverlayEvents({
-      onControlStateChanged: (snapshot) => {
-        setControlState(snapshot);
-      }
-    });
-  }, [setControlState]);
+[ŠHOˆ[‹šYOOH[šÙY[‹šY
+HÏÈ[šÙY[ˆˆ[™Yš[™YBˆ›İ˜[YO^Û[šÙY[ˆÈ›İË™š[™
 
-  // Continuous inputs (colour pickers, sliders) apply live but persist / broadcast after a pause.
-  const latestSettings = useRef<AppSettings>(settings);
-  const persistLater = useRef(
-    createDebounced(() => {
-      void saveSettings(latestSettings.current);
-      void broadcastSettingsUpdated(latestSettings.current);
-    }, 250)
-  );
-  useEffect(() => {
-    const flush = () => persistLater.current.flush();
-    window.addEventListener("pagehide", flush);
-    return () => {
-      window.removeEventListener("pagehide", flush);
-      flush();
-    };
-  }, []);
+›İ
+HOˆ›İšYOOH[šÙY[‹˜›İÚY
+OË›˜[YHÏÈˆˆˆˆŸBˆÛÛÜÙO^Ê
+HOˆÙ][šÙY[Š[
+_BˆÏ‚ˆ[[Ù[ˆÜ[^Ú[Ü[ŸBˆÛÛÜÙO^Ê
+HOˆÙ][Ü[Š˜[ÙJ_BˆİÜİÙ^O^ØÛÛ›Ûİ]KœİÜİÙ^HÙ][™ÜËœİÜİÙ^_BˆÙ[™Ú]^ÜÙ][™ÜËœÙ[™Ú]BˆÛ”Ù]\^Ê
+HOˆÂˆÙ][Ü[Š˜[ÙJNÂˆ[™SÜ[“Û˜›Ø\™[™Ê˜[ÙJNÂˆ_BˆÏ‚ˆ]™UšY]Ù\ˆÛÚ]ÛİÏ^Ü›İ]KšÚ[™OOH˜Ú]ˆ	‰ˆZÜİ[\HÈÙ]ÛYPÚ]ÛİÈˆ[™Yš[™YHÏ‚ˆØXİ]™PÛÛ\]\’YOOHĞĞSĞÓÓTUTˆÈ
+ˆ]™UšY]Ù\ˆÛİ\˜ÙOH›ØØ[ˆÛÚ]ÛİÏ^Ü›İ]KšÚ[™OOH˜Ú]ˆ	‰ˆZÜİ[\HÈÙ]ØØ[Ú]ÛİÈˆ[™Yš[™YHÏ‚ˆ
+Hˆ[BˆØİ\İÛPÚ›ÛYHÈÚ[™İĞÛÛ›ÛÈÏˆˆ[BˆÔÚYX˜\“^[İ]‚ˆ
+NÂŸB‚‹ÊŠ‚ˆ
+ˆHØØ[Y[[Û‰ÜÈØY™]HXXÚ[™\H
+X\™X]˜]]™HİÜ[™˜^KØØ[]™[ˆ
+ˆİ™X[K\›İ˜[İ™\›^\ÊHİ^\ÈÛÛ›™XİYÈTÈÛÛ\]\ˆÚXÚ]™\ˆÛÛ\]\ˆBˆ
+ˆšY]ÜÈÚİËˆÙ[Xİ[™ÈHÜİÛ›HİØ\ÈHY[[ÛˆHÚ][™[™[šY]ÜÈ[Âˆ
+ˆÈ
+HÙXÛÛ™Ù\ÜÚ[Ûˆ[™]™HšY]Ë™XZ[\ˆÜİ
+K‚ˆ
+‹Â™^Ü[˜İ[ÛˆÛÛ\]\”ØÛÜJÈÚ[™[ˆNˆÈÚ[™[ˆ™XXİ›ÙHJHÂˆÛÛœİÈXİ]™PÛÛ\]\’YHH\ÙQY[[ÛŠ
+NÂˆÛÛœİ[ˆHÛÛ\]\”ØÛÜT[ŠXİ]™PÛÛ\]\’YĞĞSĞÓÓTUTŠNÂˆ™]\›ˆ
+ˆ]™UšY]Ô›İšY\ˆØÛÜOH›ØØ[‚ˆÜ[‹›ØØ[œšYÙHÈÛÛ›ÛœšYÙRÜİÏˆˆ[BˆÈ\[‹šÜİÙ\ÜÚ[ÛˆÈ
+ˆœ˜YÛY[Ù^O^ÓĞĞSĞÓÓTUTŸOØÚ[™[ŸOÑœ˜YÛY[‚ˆ
+Hˆ
+ˆÜİÙ\ÜÚ[ÛˆÙ^O^ØXİ]™PÛÛ\]\’YO‚ˆ]™UšY]Ô›İšY\ØÚ[™[ŸOÓ]™UšY]Ô›İšY\‚ˆÒÜİÙ\ÜÚ[Û‚ˆ
+_BˆÓ]™UšY]Ô›İšY\‚ˆ
+NÂŸB‚™^Ü[˜İ[Ûˆ\
 
-  const updateSettings = (patch: Partial<AppSettings>, opts?: { deferSave?: boolean }) => {
-    setSettings((prev) => {
-      const next: AppSettings = { ...prev, ...patch };
-      latestSettings.current = next;
-      if (opts?.deferSave) {
-        persistLater.current();
-      } else {
-        persistLater.current.cancel();
-        void saveSettings(next);
-        void broadcastSettingsUpdated(next);
-      }
-      return next;
-    });
-  };
+HÂˆÛÛœİÙY\[šÜ×HH\ÙTİ]JÜ™X]QY\[šÑ\Ü]Ú\ŠNÂˆ\ÙQY™™Xİ
 
-  // Sidebar order: settings hold the ids, the daemon context sorts `bots` with them (top = main bot).
-  // Each computer keeps its OWN order (and so its own main bot): writing one never touches the other.
-  useEffect(() => {
-    setBotOrderSnapshot(settings.botOrder, settings.hostBotOrders);
-  }, [settings.botOrder, settings.hostBotOrders]);
-  const saveBotOrder = (next: string[]) => {
-    updateSettings(
-      activeComputerId === LOCAL_COMPUTER
-        ? { botOrder: next }
-        : { hostBotOrders: { ...settings.hostBotOrders, [activeComputerId]: next } }
-    );
-  };
-  const [orderNote, setOrderNote] = useState("");
-  const botIds = useMemo(() => bots.map((b) => b.id), [bots]);
-  const reorder = useBotReorder(
-    botIds,
-    saveBotOrder,
-    (id, pos) => setOrderNote(t("sidebar.reorderMoved", { name: bots.find((b) => b.id === id)?.name ?? "", pos }))
-  );
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (recordingHotkey) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (event.key === "Escape" && !event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
-          setRecordingHotkey(false);
-          return;
-        }
-        const recorded = formatKeyboardEventAsHotkey(event);
-        if (recorded) {
-          setRecordingHotkey(false);
-          updateSettings({ stopHotkey: recorded });
-          void setStopHotkey(recorded)
-            .then(setControlState)
-            .catch(() => {});
-        }
-        return;
-      }
-
-      const activeHotkey = controlState.stopHotkey || settings.stopHotkey;
-      if (matchesHotkeyEvent(event, activeHotkey)) {
-        event.preventDefault();
-        // One key press = one Stop decision (never on key repeat). The ledger halts
-        // native input, cancels runs and pauses a held takeover.
-        if (!event.repeat) {
-          requestStop("hotkey");
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [recordingHotkey, controlState.stopHotkey, settings.stopHotkey, setControlState]);
-
-  // Native title bar on / off (Tauri window decorations; no-op in a browser).
-  useEffect(() => {
-    if (!isTauriRuntime()) {
-      return;
-    }
-    void getCurrentWindow()
-      .setDecorations(settings.windowFrame)
-      .catch(() => {});
-  }, [settings.windowFrame]);
-
-  // Native frame off (the default on Windows): the app draws the window controls.
-  // `?mock=1&chrome=1` previews the strip in a plain browser (inert buttons) for layout checks.
-  const previewChrome = isMockMode() && new URLSearchParams(window.location.search).get("chrome") === "1";
-  const customChrome = (isTauriRuntime() && !settings.windowFrame) || previewChrome;
-  // Panels start below the reserved strip (see Sidebar.module.css); html[data-chrome] drives that.
-  useEffect(() => {
-    if (!customChrome) return undefined;
-    document.documentElement.dataset.chrome = "custom";
-    return () => {
-      delete document.documentElement.dataset.chrome;
-    };
-  }, [customChrome]);
-
-  const handleLanguageChange = (language: SupportedLanguage) => {
-    void i18n.changeLanguage(language);
-    updateSettings({ language });
-  };
-
-  const handleWindowFrameChange = (windowFrame: boolean) => {
-    updateSettings({ windowFrame });
-  };
-
-  const handleStopHotkeyChange = (stopHotkey: string) => {
-    setRecordingHotkey(false);
-    updateSettings({ stopHotkey });
-    void setStopHotkey(stopHotkey)
-      .then(setControlState)
-      .catch(() => {});
-  };
-
-  const handleToggleAutostart = async () => {
-    setAutostartError(null);
-    const nextVal = !settings.autostart;
-    try {
-      const applied = await setAutostart(nextVal);
-      updateSettings({ autostart: applied });
-    } catch {
-      setAutostartError(t("settings.autostart.error"));
-    }
-  };
-
-  const handleOpenOnboarding = (restartFromFirstStep: boolean) => {
-    if (onboardingBlocked) {
-      return;
-    }
-    if (restartFromFirstStep) {
-      updateSettings({
-        onboardingStep: 1,
-        onboardingSkipped: false
-      });
-    } else {
-      updateSettings({
-        onboardingSkipped: false
-      });
-    }
-    go({ kind: "onboarding" });
-  };
-
-  const routeBotId =
-    route.kind === "bot" || route.kind === "chat" ? route.botId : undefined;
-  const selectedBot = bots.find((bot) => bot.id === routeBotId) ?? bots[0];
-  // The wallpaper (when on) takes the backdrop's place, so the panels' glass, tone sampling and
-  // floating layout all follow the existing backdrop plumbing.
-  const baseTheme = resolveTheme(settings.themeMode, settings.customTheme, systemPairOf(settings));
-  const wallpaperKind = resolveWallpaper(settings.wallpaper, baseTheme.id, !isLightColor(baseTheme.bg));
-  const shellSettings = useMemo(
-    () =>
-      wallpaperKind
-        ? { ...settings, backdrop: wallpaperSceneId(wallpaperKind), backdropDim: WALLPAPER_DIM, veil: settings.wallpaperVeil }
-        : settings,
-    [settings, wallpaperKind]
-  );
-  const { theme: activeTheme, accent: activeAccent } = useApplyAppearance(
-    shellSettings,
-    selectedBot ? botView(selectedBot).color : undefined
-  );
-
-  const handleSimulateBotRun = () => {
-    const view = selectedBot ? botView(selectedBot) : null;
-    void simulateBotRun({
-      botId: view?.id ?? "atlas",
-      botName: view?.name ?? "Atlas",
-      botShape: view?.shape,
-      botAvatar: view?.avatar,
-      botColor: view?.color ?? BOT_COLORS[0],
-      botInitials: view?.initials ?? "AT"
-    }).then(setControlState);
-  };
-
-  const handleAccountAction = (action: AccountAction) => {
-    if (action === "settings") {
-      setSettingsOpen("general");
-    } else if (action === "appearance" || action === "ai" || action === "usage" || action === "updates") {
-      setSettingsOpen(action);
-    } else if (action === "computer") {
-      setSettingsOpen("computer");
-    } else if (action === "schedules") {
-      go({ kind: "schedules" });
-    } else if (action === "apps") {
-      setAppsOpen(true);
-    } else {
-      setHelpOpen(true);
-    }
-  };
-
-  // Composer commands (/help, /settings ...) ask the shell to open the same places as the profile menu.
-  const accountActionRef = useRef(handleAccountAction);
-  accountActionRef.current = handleAccountAction;
-  useEffect(() => {
-    const onCommand = (e: Event) => {
-      const target = (e as CustomEvent<AppCommandTarget>).detail;
-      accountActionRef.current(target);
-    };
-    window.addEventListener(APP_COMMAND_EVENT, onCommand);
-    return () => window.removeEventListener(APP_COMMAND_EVENT, onCommand);
-  }, []);
-
-  // Ctrl/Cmd + , opens settings (the shortcut the profile menu advertises).
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key === ",") {
-        e.preventDefault();
-        setSettingsOpen("general");
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  // A bare `?` (no text field focused) opens the shortcuts dialog.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (isHelpKey(e)) {
-        e.preventDefault();
-        setHelpOpen(true);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  const handlePaletteScreen = (screen: PaletteScreen) => {
-    if (screen === "settings" || screen === "usage") {
-      setSettingsOpen(screen === "usage" ? "usage" : "general");
-    } else {
-      go({ kind: screen });
-    }
-  };
-
-  const openChat = (chatId: string, messageId?: string) => {
-    const chat = chats.find((c) => c.id === chatId);
-    go({ kind: "chat", chatId, botId: chat?.bot_id ?? "", messageId, jumpRequestId: messageId ? Date.now() : undefined });
-  };
-  const openNeeds = () => go({ kind: "needs" });
-  const notifyHistory = useNotificationHistory();
-  const notifyUnread = unreadCount(notifyHistory);
-  // Selecting a bot: its latest chat, or the empty state when it has none.
-  const goToBot = (botId: string) => go(botLanding(botId, chats));
-  const startChat = async (botId: string) => {
-    if (!client || newChatBusy) {
-      return;
-    }
-    setNewChatBusy(true);
-    setNewChatError(null);
-    const result = await createChatFor(client, botId, refreshChats);
-    if (result.ok) {
-      setBotProfileOpen(false);
-      go({ kind: "chat", chatId: result.chatId, botId });
-    } else {
-      const detail = result.message;
-      setNewChatError(detail);
-      if (newChatFailureNeedsToast(route.kind)) {
-        toast.show(t("bots.newChatFailed", { detail }), "danger");
-      }
-    }
-    setNewChatBusy(false);
-  };
-
-  /** A suggested first prompt: open a chat and send the prompt as its first message. */
-  const startChatWith = async (botId: string, prompt: string) => {
-    if (!client || newChatBusy) {
-      return;
-    }
-    setNewChatBusy(true);
-    setNewChatError(null);
-    const result = await createChatFor(client, botId, refreshChats);
-    if (result.ok) {
-      go({ kind: "chat", chatId: result.chatId, botId });
-      try {
-        await client.sendMessage(result.chatId, prompt);
-      } catch (e) {
-        toast.show(humanLine(e), "danger");
-      }
-    } else {
-      setNewChatError(result.message);
-    }
-    setNewChatBusy(false);
-  };
-
-  const botInView = selectedBot !== undefined && (route.kind === "chat" || route.kind === "bot");
-  // The bot dialogs belong to one bot: another bot, or leaving the bot views, closes them.
-  const dialogBotId = botInView ? selectedBot?.id : undefined;
-  const lastDialogBot = useRef<string | undefined>(undefined);
-  useEffect(() => {
-    // (A first selection - mock review links open a dialog together with the route - keeps them.)
-    if (lastDialogBot.current !== undefined) {
-      setBotEditOpen(false);
-      setBotProfileOpen(false);
-      setSkillsOpen(false);
-      setAddSkillOpen(false);
-    }
-    lastDialogBot.current = dialogBotId;
-  }, [dialogBotId]);
-  const panelVisible = panelOpen && botInView;
-  const float = isFloatShell(shellSettings.uiStyle, backdropIsActive(shellSettings.backdrop, shellSettings.backgroundUrl));
-  const panelWidth = Math.min(layout.panel, panelMax(viewportWidth, layout.rail, float));
-  const panelReserve = usePanelReserve(panelVisible);
-  const railWidth = fitRail(viewportWidth, layout.rail, panelWidth, float, panelReserve);
-  const fitStored = (candidate: number) => fitRail(viewportWidth, candidate, panelWidth, float, panelReserve);
-  const search = searchPlan(layout.rail, railWidth, botSearch !== null);
-  const searchButtonRef = useRef<HTMLButtonElement | null>(null);
-  const closeSearch = useCallback(() => setBotSearch(null), []);
-  // A dialog opened by a shortcut sits above the Search popover: close the popover instead of leaving it beneath.
-  const dialogOpen = settingsOpen !== null || appsOpen || newBotOpen || helpOpen || botEditOpen || botProfileOpen || skillsOpen || addSkillOpen;
-  useEffect(() => {
-    if (dialogOpen) setBotSearch(null);
-  }, [dialogOpen]);
-
-  // "What's new": bundled notes of the installed version, shown once per version (never blocks, no network).
-  useEffect(() => {
-    // Review state `?mock=1&screen=whatsnew`: the card for the bundled notes (no Tauri runtime to ask).
-    if (isMockMode() && new URLSearchParams(window.location.search).get("screen") === "whatsnew") setAppVersion("0.1.0");
-    if (!isTauriRuntime()) return;
-    void getVersion().then(setAppVersion).catch(() => undefined);
-  }, []);
-  const whatsNewNotes = notesFor(whatsNewFile as WhatsNewFile, appVersion, i18n.language);
-  const whatsNewStep = settingsLoaded
-    ? whatsNewAction({
-        version: appVersion,
-        lastSeen: settings.lastSeenVersion,
-        onboardingCompleted: settings.onboardingCompleted,
-        hasNotes: whatsNewNotes !== null
-      })
-    : "none";
-  const recordWhatsNew = () => {
-    setWhatsNewDone(true);
-    updateSettings({ lastSeenVersion: appVersion });
-  };
-  useEffect(() => {
-    if (whatsNewStep === "record") recordWhatsNew();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [whatsNewStep]);
-  const showWhatsNew = whatsNewStep === "show" && !whatsNewDone && route.kind !== "onboarding" && !dialogOpen;
-  const mini = isMiniRail(railWidth);
-
-  // The computer card asks for the screen itself, only when the owner presses "show screen".
-  const closePanel = () =>
-    leave.attempt(() => {
-      setPanelOpen(false);
-      chipRef.current?.focus();
-    });
-  const togglePanel = () => (panelOpen ? closePanel() : setPanelOpen(true));
-  const panelBotView = selectedBot ? botView(selectedBot) : undefined;
-  const panelChats = selectedBot
-    ? botChats(chats, selectedBot.id).map((c) => ({
-        id: c.id,
-        title: c.title ?? "",
-        createdAtMs: c.created_at_ms,
-        pinned: c.pinned,
-        archived: c.archived
-      }))
-    : [];
-  const handlePatchChat = async (chatId: string, patch: UpdateChatInput) => {
-    try {
-      await updateChat(chatId, patch);
-    } catch (err) {
-      toast.show(humanLine(err), "danger");
-    }
-  };
-
-  const handleDeleteChat = async (chatId: string) => {
-    const target = chats.find((c) => c.id === chatId);
-    const remaining = chats.filter((c) => c.id !== chatId);
-    const next = target ? nextRouteAfterChatDelete(chatId, target.bot_id, remaining, route) : null;
-    try {
-      await deleteChat(chatId);
-      if (next) go(next);
-    } catch (err) {
-      toast.show(
-        err instanceof ApiError && err.code === "conflict" ? t("chatManage.deleteActiveRun") : humanLine(err),
-        "danger"
-      );
-    }
-  };
-  // One copy of the selected bot's skills for the panel and every bot dialog.
-  const botSkills = useBotSkills(botInView && selectedBot ? selectedBot.id : null, client);
-  useEffect(() => {
-    setNewChatError(null);
-  }, [routeBotId]);
-
-  const isHumanDriving = controlState.mode === "human_driving";
-  // The chat carries its own run bar (docked on the composer); every other screen
-  // gets the same bar as a strip so Stop is never out of reach.
-  const runBanner =
-    route.kind === "chat" ? null : (
-      <RunBar
-        variant="strip"
-        model={runBarModel({ chat: "none", native: controlState.mode })}
-        botName={controlState.bot?.botName}
-        detail={controlState.mode === "idle" ? null : controlState.currentStep}
-        humanDriving={isHumanDriving}
-        onStop={() => {
-          requestStop("banner");
-        }}
-        onPause={() => void pauseBotRun().then(setControlState)}
-        onResume={() => void resumeBotRun().then(setControlState)}
-        onWheel={() =>
-          void (isHumanDriving ? giveBackControl() : takeTheWheel()).then(
-            setControlState
-          )
-        }
-        onBigView={() => openViewer()}
-      />
-    );
-
-  return (
-    <SidebarLayout
-      style={{ "--size-sidebar-width": `${railWidth}px` } as CSSProperties}
-      backdrop={
-        wallpaperKind ? (
-          <Wallpaper kind={wallpaperKind} motion={settings.wallpaperMotion} />
-        ) : settings.backdrop !== NO_BACKDROP && settings.backdrop !== CUSTOM_BACKDROP ? (
-          <Backdrop
-            scene={settings.backdrop}
-            dim={settings.backdropDim}
-            colors={sceneColors(activeTheme, activeAccent)}
-          />
-        ) : undefined
-      }
-      aside={
-        <SidePanel
-          open={panelVisible}
-          width={panelWidth}
-          aria-label={t("botPanel.toggle")}
-          onKeyDown={(e) => {
-            if (e.key === "Escape" && panelVisible) {
-              e.stopPropagation();
-              closePanel();
-            }
-          }}
-        >
-          <ResizeGrip
-            side="start"
-            label={t("shell.panelGrip")}
-            value={panelWidth}
-            min={PANEL_MIN}
-            max={panelMax(viewportWidth, layout.rail, float)}
-            onDrag={(x) => setPanelWidth(panelWidthFromPointer(x, window.innerWidth, gridPad(), layout.rail, float))}
-            onStep={(dir) => setPanelWidth(stepPanel(panelWidth, dir === -1 ? 1 : -1, window.innerWidth, layout.rail, float))}
-          />
-          {selectedBot && panelBotView ? (
-            <BotPanel
-              bot={panelBotView}
-              model={panelBotView.executor}
-              engineCli={nativeEngineName(selectedBot.config)}
-              chats={panelChats}
-              activeChatId={route.kind === "chat" ? route.chatId : undefined}
-              onClose={closePanel}
-              preset={draftFromBot(selectedBot).preset}
-              needs={needs}
-              runs={runs}
-              pendingChatIds={pendingChatIds}
-              skills={botSkills}
-              newChatBusy={newChatBusy}
-              visible={panelVisible}
-              onOpenChat={openChat}
-              onNewChat={() => void startChat(selectedBot.id)}
-              onPatchChat={handlePatchChat}
-              onDeleteChat={handleDeleteChat}
-              onOpenProfile={() => setBotProfileOpen(true)}
-              onOpenSettings={() => setBotEditOpen(true)}
-              onManageSkills={() => setSkillsOpen(true)}
-              onAddSkill={() => setAddSkillOpen(true)}
-              onOpenMail={() => setSettingsOpen("mail")}
-              isMain={bots[0]?.id === selectedBot.id}
-              mainBotName={bots[0] ? botView(bots[0]).name : undefined}
-              onMakeMain={botIds.length > 1 ? () => saveBotOrder(makeBotMain(botIds, selectedBot.id)) : undefined}
-              notifyMuted={isBotMuted(settings.mutedBotIds, selectedBot.id)}
-              onToggleNotifyMute={() =>
-                updateSettings({
-                  mutedBotIds: setBotMuted(
-                    settings.mutedBotIds,
-                    selectedBot.id,
-                    !isBotMuted(settings.mutedBotIds, selectedBot.id)
-                  )
-                })
-              }
-            />
-          ) : null}
-        </SidePanel>
-      }
-      sidebar={
-        <Sidebar className={[styles.rail, mini ? styles.railMini : ""].filter(Boolean).join(" ")} data-rail-tier={railTier(railWidth)}>
-          <a
-            href="#main-content"
-            className={styles.skipLink}
-            data-testid="skip-to-main"
-            onClick={(e) => {
-              e.preventDefault();
-              const main = document.getElementById("main-content");
-              const target =
-                main?.querySelector<HTMLElement>(
-                  "textarea:not([disabled]), [data-autofocus], h1[tabindex], button:not([disabled]), [href], input:not([disabled])"
-                ) ?? main;
-              target?.focus();
-            }}
-          >
-            {t("shell.skipToMain")}
-          </a>
-          <ResizeGrip
-            side="end"
-            label={t("shell.railGrip")}
-            value={railWidth}
-            min={RAIL_MINI}
-            max={RAIL_MAX}
-            onDrag={(x) => setRail(railWidthFromPointer(x, gridPad()))}
-            onStep={(dir) => setRail(railAfterStep(layout.rail, railWidth, dir, fitStored))}
-          />
-          <SidebarHeader>
-            <div className={styles.brand}>
-              <b className={styles.brandName}>{PRODUCT_CONFIG.appName}</b>
-              <div className={styles.topActions}>
-                <button ref={searchButtonRef} className={styles.iconButton} title={t("sidebar.searchBots")} aria-label={t("sidebar.searchBots")} onClick={() => { if (search.expandStored) setRail(RAIL_MIN); setBotSearch(search.open ? "" : null); }}><Search /></button>
-                <button className={styles.iconButton} title={t("sidebar.newBot")} aria-label={t("sidebar.newBot")} data-testid="new-bot-button" onClick={() => setNewBotOpen(true)}><Plus /></button>
-              </div>
-            </div>
-            {botSearch !== null && !mini ? <input className={styles.botSearch} autoFocus value={botSearch} onChange={e => setBotSearch(e.target.value)} aria-label={t("sidebar.searchBots")} placeholder={t("sidebar.searchBots")} /> : null}
-            {search.popover ? (
-              <Popover open={botSearch !== null} anchor={searchButtonRef} onClose={closeSearch} placement="bottom-start" role="dialog" label={t("sidebar.searchBots")} width={240}>
-                <input className={styles.botSearchPopover} value={botSearch ?? ""} onChange={e => setBotSearch(e.target.value)} aria-label={t("sidebar.searchBots")} placeholder={t("sidebar.searchBots")} />
-              </Popover>
-            ) : null}
-          </SidebarHeader>
-          <SidebarSection>
-            <span className={styles.srOnly} role="status" aria-live="polite">{orderNote}</span>
-            <div ref={reorder.containerRef} className={styles.botList} data-stale={homeStale ? "true" : undefined}>
-            {needs.length > 0 ? <SidebarItem className={styles.railItem} active={route.kind === "needs"} title={t("sidebar.needsYou")} aria-label={mini ? t("sidebar.needsYouCount", { count: needs.length }) : undefined} onClick={openNeeds}><BellDot /><span className={`${styles.botName} ${styles.railText}`}>{t("sidebar.needsYou")}</span><span className={styles.needsBadge} data-testid="needs-you-badge" aria-label={t("sidebar.needsYouCount", { count: needs.length })}>{needs.length}</span></SidebarItem> : null}
-            {notifyHistory.length > 0 ? <SidebarItem className={styles.railItem} active={route.kind === "notifications"} title={t("sidebar.notifications")} aria-label={mini ? t("sidebar.notificationsCount", { count: notifyUnread }) : undefined} onClick={() => go({ kind: "notifications" })}><BellRing /><span className={`${styles.botName} ${styles.railText}`}>{t("sidebar.notifications")}</span>{notifyUnread > 0 ? <span className={styles.needsBadge} data-testid="notify-history-badge" aria-label={t("sidebar.notificationsCount", { count: notifyUnread })}>{notifyUnread}</span> : null}</SidebarItem> : null}
-            {filterBots(bots, botSearch).map((bot) => {
-              const view = botView(bot);
-              const latest = botChats(chats, bot.id).find((c) => !c.archived);
-              const config = bot.config as { bot?: { preview?: string; state?: string; unread?: boolean } };
-              const live = runs.find(r => r.bot_id === bot.id && isProcessingRunState(r.state));
-              const state = needs.some(n => n.botId === bot.id) || live?.state === "waiting_approval" ? "waiting-approval" : live ? "working" : isMockMode() ? config.bot?.state : "idle";
-              const avatarState = state === "thinking" || state === "working" || state === "waiting-approval" || state === "error" ? state : "idle";
-              const index = botIds.indexOf(bot.id);
-              const canReorder = botSearch === null || botSearch === "";
-              const drag = reorder.drag;
-              const dropEdge = drag && drag.id !== bot.id && drag.over === index ? (drag.over < drag.from ? "before" : "after") : undefined;
-              return <div key={bot.id} className={styles.botRow} data-dragging={drag?.id === bot.id ? "true" : undefined} data-drop={dropEdge} {...(canReorder ? reorder.rowProps(bot.id) : { "data-bot-id": bot.id })}>
-                <SidebarItem className={styles.railItem} active={routeBotId === bot.id} title={view.name} aria-label={mini ? view.name : undefined} onClick={() => goToBot(bot.id)}>
-                  <BotAvatar bot={view} size="md" state={avatarState} decorative />
-                  <div className={`${styles.botMeta} ${styles.railText}`}><span className={styles.botName}><span className={styles.botNameText}>{view.name}</span>{index === 0 && botIds.length > 1 ? <span className={styles.mainMark} role="img" title={t("sidebar.mainBotHint")} aria-label={t("sidebar.mainBotHint")}><Star aria-hidden="true" /></span> : null}</span><span className={styles.botRole}>{(isMockMode() ? config.bot?.preview : undefined) ?? chatTitleLabel(latest?.title, t("bots.newChat"))}</span></div>
-                  {unreadBots.has(bot.id) ? <span className={styles.unreadDot} role="img" aria-label={t("sidebar.unreadBot")} data-testid="bot-unread" /> : null}
-                </SidebarItem>
-                {canReorder && !mini && botIds.length > 1 ? <button type="button" className={styles.grip} aria-label={t("sidebar.reorderBot", { name: view.name })} title={t("sidebar.reorderHint")} {...reorder.gripProps(bot.id)}><GripVertical aria-hidden="true" /></button> : null}
-              </div>;
-            })}
-            </div>
-          </SidebarSection>
-
-          <SidebarFooter className={styles.railFoot}>
-            {import.meta.env.DEV && new URLSearchParams(window.location.search).get("dev") === "1" ? <Button variant="ghost" onClick={handleSimulateBotRun}><FlaskConical />{mini ? null : t("dev.simulateBotRun")}</Button> : null}
-            <div className={styles.footRow}>
-              <AccountMenu name={settings.accountName} computerTarget={settings.computerTarget} compact={mini} onAction={handleAccountAction} />
-              <AppsPill connected={appServers.filter(s => s.status === "connected").map(s => s.name)} onClick={() => setAppsOpen(true)} />
-            </div>
-          </SidebarFooter>
-        </Sidebar>
-      }
-    >
-      <div id="main-content" tabIndex={-1} className={styles.mainColumn}>
-        <div className={styles.titleBar} data-tauri-drag-region>
-          <span className={styles.runtimeLabel} data-tauri-drag-region title={home.kind === "host" && !workLocalNow ? home.name || t("computerPicker.host") : t("account.localComputer")}><i className={styles.liveDot} aria-hidden="true" />{home.kind === "host" && !workLocalNow ? <Server className={styles.runtimeIcon} aria-hidden="true" /> : <Monitor className={styles.runtimeIcon} aria-hidden="true" />}<span className={styles.runtimeName}>{home.kind === "host" && !workLocalNow ? home.name || t("computerPicker.host") : t("account.localComputer")}</span></span>
-          {botInView && panelBotView ? (
-            <button
-              ref={chipRef}
-              type="button"
-              className={styles.botChip}
-              aria-expanded={panelVisible}
-              aria-controls="bot-panel"
-              title={t("botPanel.toggle")}
-              aria-label={`${panelBotView.name}: ${t("botPanel.toggle")}`}
-              data-testid="bot-chip"
-              onClick={togglePanel}
-            >
-              <BotAvatar bot={panelBotView} size="xs" decorative />
-              <span className={styles.botChipName}>{panelBotView.name}</span>
-              <ChevronDown aria-hidden="true" />
-            </button>
-          ) : <span />}
-          <div className={styles.windowActions} data-tauri-drag-region>
-            <ComputerPicker />
-            <button className={styles.iconButton} title={t("account.settings")} aria-label={t("account.settings")} onClick={() => setSettingsOpen("general")}><Settings2 /></button>
-          </div>
-        </div>
-        {activeComputerId === LOCAL_COMPUTER ? <HealthIndicator /> : null}
-        <SafeModeBanner />
-        <HostStateBanner />
-        <ShellBridgeHost
-          settings={settings}
-          onOpenChat={openChat}
-          onOpenNeeds={openNeeds}
-        />
-        <DigestNotifier
-          digestTime={settings.digestTime}
-          digestLastDay={settings.digestLastDay}
-          quietHours={settings.quietHours}
-          isPrivate={settings.notifyPrivate}
-          onHandled={(day) => updateSettings({ digestLastDay: day })}
-        />
-        <HumanDrivingBanner />
-        {runBanner}
-        {settings.onboardingSkipped && !settings.onboardingCompleted && route.kind !== "onboarding" ? (
-          <FinishSetupHint onClick={() => handleOpenOnboarding(false)} />
-        ) : null}
-        {panelVisible || route.kind === "chat" ? null : <StopStatusNotice variant="main" />}
-        <PausedControlBanner />
-        {route.kind === "onboarding" && !onboardingBlocked ? (
-          <OnboardingView
-            settings={settings}
-            onLanguageChange={handleLanguageChange}
-            onHelp={() => setHelpOpen(true)}
-            onSkip={() => {
-              updateSettings({ onboardingSkipped: true });
-              go({ kind: "home" });
-            }}
-            onComplete={({ botId }) => {
-              updateSettings({ onboardingCompleted: true, onboardingSkipped: false });
-              if (botId) {
-                go({ kind: "bot", botId });
-              } else {
-                go({ kind: "home" });
-              }
-            }}
-          />
-        ) : null}
-        {hostEmpty && (route.kind === "home" || route.kind === "chat" || route.kind === "bot") ? (
-          <HostEmptyState onNewBot={() => setNewBotOpen(true)} onConnectModel={() => setSettingsOpen("ai")} />
-        ) : null}
-        {route.kind === "home" && !hostEmpty ? (
-          <div className={styles.centerPane}>
-            <Card padding="lg" className={styles.emptyStateCard}>
-              {phase !== "ready" && startup ? (
-                <StartupProblem startup={startup} raw={daemonError ?? ""} />
-              ) : phase === "error" ? (
-                <div className={styles.selectedBotContent} data-testid="daemon-offline-empty-state">
-                  <span className={`${styles.stateIcon} ${styles.stateIconDanger}`}><ServerOff /></span>
-                  <ErrorNotice error={humanService(serviceProblem ?? "down", daemonError ?? "")} />
-                  {retryInSeconds ? (
-                    <p className={styles.emptyStateDescription}>{t("errors.retrying", { seconds: retryInSeconds })}</p>
-                  ) : null}
-                  <div className={styles.optionRow}>
-                    <Button variant="primary" onClick={() => void restartDaemon()}>
-                      {t("errors.restartService")}
-                    </Button>
-                    <Button variant="secondary" onClick={retry}>
-                      {t("main.daemonRetry")}
-                    </Button>
-                    <Button variant="secondary" onClick={() => handleOpenOnboarding(false)}>
-                      {t("main.runSetupWizard")}
-                    </Button>
-                  </div>
-                </div>
-              ) : phase === "connecting" && bots.length === 0 ? (
-                <div className={styles.selectedBotContent}>
-                  <span className={styles.stateIcon}><LoaderCircle className={styles.spin} /></span><h1 className={styles.emptyStateTitle}>
-                    {t("main.daemonConnectingTitle")}
-                  </h1>
-                  <p className={styles.emptyStateDescription}>
-                    {t("main.daemonConnectingDescription")}
-                  </p>
-                  <Button variant="secondary" onClick={retry}>
-                    {t("main.daemonRetry")}
-                  </Button>
-                </div>
-              ) : (
-                  <div
-                    className={styles.selectedBotContent}
-                    data-testid="home-empty-state"
-                  >
-                    <MessageSquare className={styles.emptyIcon} /><h1 className={styles.emptyStateTitle}>
-                      {bots.length === 0
-                        ? t("main.welcomeTitle")
-                        : t("main.selectBotTitle")}
-                    </h1>
-                    <p className={styles.emptyStateDescription}>
-                      {bots.length === 0
-                        ? t("main.welcomeDescription")
-                        : t("main.selectBotDescription")}
-                    </p>
-                    <div className={styles.optionRow}>
-                      {bots.length === 0 ? (
-                        <>
-                          <Button
-                            variant="primary"
-                            onClick={() => handleOpenOnboarding(false)}
-                          >
-                            {t("main.runSetupWizard")}
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => setNewBotOpen(true)}
-                          >
-                            <Plus />{t("sidebar.newBot")}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            onClick={() => void refreshBots()}
-                          >
-                            {t("main.refreshBots")}
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          variant="primary"
-                          onClick={() => setNewBotOpen(true)}
-                        >
-                          <Plus />{t("sidebar.newBot")}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-              )}
-            </Card>
-          </div>
-        ) : null}
-        {route.kind === "bot" && !hostEmpty ? (
-          <BotEmptyView
-            key={route.botId}
-            bot={panelBotView && selectedBot?.id === route.botId ? panelBotView : undefined}
-            busy={newChatBusy}
-            error={newChatError}
-            onNewChat={() => void startChat(route.botId)}
-            onSuggest={(prompt) => void startChatWith(route.botId, prompt)}
-            firstBot={bots[0] ? { id: bots[0].id, name: bots[0].name } : undefined}
-            onGoFirst={goToBot}
-            onCreateBot={() => setNewBotOpen(true)}
-          />
-        ) : null}
-        {route.kind === "chat" && !hostEmpty ? (
-          <ChatView
-            key={route.chatId}
-            chatId={route.chatId}
-            jumpMessageId={route.messageId}
-            jumpRequestId={route.jumpRequestId}
-            onBack={() => {
-              // There is no bot page to go back to: the chat list lives in the right panel.
-              if (backFromChatOpensPanel(panelOpen)) setPanelOpen(true);
-            }}
-            control={controlState}
-            onControl={setControlState}
-            onSwitchChat={openChat}
-            showAgentRoute={settings.showAgentRoute}
-            sendWith={settings.sendWith}
-            messageTimes={settings.messageTimes}
-            liveChatSlots={localChatSlots ?? homeChatSlots}
-          />
-        ) : null}
-        {route.kind === "needs" ? <NeedsYouView onOpenChat={openChat} /> : null}
-        {route.kind === "notifications" ? <NotificationHistoryView onOpenChat={openChat} onOpenNeeds={openNeeds} /> : null}
-        {route.kind === "schedules" ? (
-          <SchedulesView onOpenChat={openChat} />
-        ) : null}
-      </div>
-      <PaletteHost
-        currentBotId={routeBotId}
-        onScreen={handlePaletteScreen}
-        onBot={goToBot}
-        onChat={(chatId, botId) => go({ kind: "chat", chatId, botId })}
-        onSettingsPage={(page) => setSettingsOpen(page)}
-        onHelp={() => setHelpOpen(true)}
-      />
-      <SettingsModal
-        open={settingsOpen !== null}
-        initialSection={settingsOpen ?? "general"}
-        onClose={() => setSettingsOpen(null)}
-        bridge={{
-          settings,
-          update: updateSettings,
-          botColor: selectedBot ? botView(selectedBot).color : undefined,
-          onLanguage: handleLanguageChange,
-          onWindowFrame: handleWindowFrameChange,
-          recordingHotkey,
-          onToggleRecordHotkey: () => setRecordingHotkey((prev) => !prev),
-          onStopHotkey: handleStopHotkeyChange,
-          onToggleAutostart: () => void handleToggleAutostart(),
-          autostartError,
-          onOpenOnboarding: (restart) => {
-            setSettingsOpen(null);
-            handleOpenOnboarding(restart);
-          }
-        }}
-      />
-      <AppsModal open={appsOpen} onClose={() => setAppsOpen(false)} />
-      <NewBotModal
-        open={newBotOpen}
-        onClose={() => setNewBotOpen(false)}
-        onDone={(botId) => {
-          setNewBotOpen(false);
-          goToBot(botId);
-        }}
-      />
-      <BotProfileModal
-        open={botProfileOpen && botInView}
-        bot={selectedBot}
-        skills={botSkills}
-        newChatBusy={newChatBusy}
-        onClose={() => setBotProfileOpen(false)}
-        onEdit={() => {
-          setBotProfileOpen(false);
-          setBotEditOpen(true);
-        }}
-        onNewChat={() => {
-          if (selectedBot) void startChat(selectedBot.id);
-        }}
-      />
-      <BotEditModal
-        open={botEditOpen && botInView}
-        bot={selectedBot}
-        skills={botSkills}
-        initialSection={editSection}
-        onClose={() => {
-          setBotEditOpen(false);
-          setEditSection(review.section);
-        }}
-        onAddSkill={() => setAddSkillOpen(true)}
-        onDeleted={() => {
-          setBotEditOpen(false);
-          setRoute({ kind: "home" });
-        }}
-      />
-      <SkillsModal
-        open={skillsOpen && botInView}
-        botName={panelBotView?.name ?? ""}
-        skills={botSkills}
-        onClose={() => setSkillsOpen(false)}
-        onAddSkill={() => setAddSkillOpen(true)}
-      />
-      <AddSkillModal
-        open={addSkillOpen && botInView}
-        client={client}
-        botName={panelBotView?.name ?? ""}
-        skills={botSkills}
-        initialStep={review.installStep ? "install" : undefined}
-        onClose={() => setAddSkillOpen(false)}
-      />
-      <WhatsNewModal notes={showWhatsNew ? whatsNewNotes : null} onClose={recordWhatsNew} />
-      <HelpModal
-        open={helpOpen}
-        onClose={() => setHelpOpen(false)}
-        stopHotkey={controlState.stopHotkey || settings.stopHotkey}
-        sendWith={settings.sendWith}
-        onSetup={() => {
-          setHelpOpen(false);
-          handleOpenOnboarding(false);
-        }}
-      />
-      <LiveViewer onChatSlots={route.kind === "chat" && !hostEmpty ? setHomeChatSlots : undefined} />
-      {activeComputerId !== LOCAL_COMPUTER ? (
-        <LiveViewer source="local" onChatSlots={route.kind === "chat" && !hostEmpty ? setLocalChatSlots : undefined} />
-      ) : null}
-      {customChrome ? <WindowControls /> : null}
-    </SidebarLayout>
-  );
-}
-
-/**
- * The local daemon's safety machinery (heartbeat, native Stop and tray, local event
- * stream, approval overlays) stays connected to THIS computer whichever computer the
- * views show. Selecting a host only swaps the daemon the chat and panel views talk
- * to (a second session and live view, rebuilt per host).
- */
-export function ComputerScope({ children }: { children: ReactNode }) {
-  const { activeComputerId } = useDaemon();
-  const plan = computerScopePlan(activeComputerId, LOCAL_COMPUTER);
-  return (
-    <LiveViewProvider scope="local">
-      {plan.localBridge ? <ControlBridgeHost /> : null}
-      {!plan.hostSession ? (
-        <Fragment key={LOCAL_COMPUTER}>{children}</Fragment>
-      ) : (
-        <HostSession key={activeComputerId}>
-          <LiveViewProvider>{children}</LiveViewProvider>
-        </HostSession>
-      )}
-    </LiveViewProvider>
-  );
-}
-
-export function App() {
-  return (
-    <ToastProvider>
-      <DaemonProvider>
-        <ServerTerminalProvider>
-          <ComputerRequestModal />
-          <ComputerScope>
-            <LeaveGuardProvider>
-              <EngineConsentProvider>
-                <AppShell />
-              </EngineConsentProvider>
-            </LeaveGuardProvider>
-          </ComputerScope>
-        </ServerTerminalProvider>
-      </DaemonProvider>
-    </ToastProvider>
-  );
-}
+HOˆÛ‘Y\[šÔ[™[™ÊY\[šÜÊKÙY\[šÜ×JNÂˆ™]\›ˆ
+ˆØ\İ›İšY\‚ˆY[[Û”›İšY\‚ˆÙ\™\•\›Z[˜[›İšY\‚ˆÛÛ\]\”™\]Y\İ[Ù[Ï‚ˆÛÛ\]\”ØÛÜO‚ˆX]™QİX\™›İšY\‚ˆ[™Ú[™PÛÛœÙ[›İšY\‚ˆ\Ú[Y\[šÜÏ^ÙY\[šÜßHÏ‚ˆÑ[™Ú[™PÛÛœÙ[›İšY\‚ˆÓX]™QİX\™›İšY\‚ˆĞÛÛ\]\”ØÛÜO‚ˆÔÙ\™\•\›Z[˜[›İšY\‚ˆÑY[[Û”›İšY\‚ˆÕØ\İ›İšY\‚ˆ
+NÂŸB

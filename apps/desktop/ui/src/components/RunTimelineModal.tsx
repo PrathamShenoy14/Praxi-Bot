@@ -2,9 +2,11 @@ import { Download } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "ui";
+import type { Run } from "../api/types";
 import { formatElapsed } from "../lib/activityPanel";
 import {
   buildRunReport,
+  buildRunReportFromFacts,
   renderHtml,
   renderMarkdown,
   saveTextFile,
@@ -16,21 +18,25 @@ import { Modal } from "./Modal";
 import { useToast } from "./Toast";
 import styles from "./RunTimelineModal.module.css";
 
-/** What a bot did in one finished run, step by step, with a redacted HTML / Markdown export. */
+/** What a bot did in one run, step by step, with a redacted HTML / Markdown export. */
 export function RunTimelineModal({
   run,
+  fallback,
   botName,
   onClose
 }: {
   run: RunState | null;
+  fallback?: Run;
   botName: string;
   onClose: () => void;
 }) {
   const { t, i18n } = useTranslation();
   const toast = useToast();
+  const runId = run?.id ?? fallback?.id;
   const report = useMemo(
-    () => (run ? buildRunReport(run, botName, (k, v) => t(k, v) as string, formatElapsed) : null),
-    [run, botName, t]
+    () => run ? buildRunReport(run, botName, (k, v) => t(k, v) as string, formatElapsed)
+      : fallback ? buildRunReportFromFacts(fallback, botName) : null,
+    [run, fallback, botName, t]
   );
   const text = useMemo((): ReportText => {
     const time = (ms: number) =>
@@ -50,22 +56,22 @@ export function RunTimelineModal({
     return {
       title: t("runReport.title"),
       facts,
-      noSteps: t("runReport.noSteps"),
+      noSteps: run ? t("runReport.noSteps") : t("runReport.noRecordedSteps"),
       footer: t("runReport.footer"),
       language: i18n.language,
       time
     };
-  }, [report, t, i18n.language]);
+  }, [report, run, t, i18n.language]);
 
   const save = (kind: "html" | "md") => {
-    if (!report || !run) return;
+    if (!report || !runId) return;
     const body = kind === "html" ? renderHtml(report, text) : renderMarkdown(report, text);
-    saveTextFile(`run-${run.id.slice(0, 8)}.${kind}`, kind === "html" ? "text/html" : "text/markdown", body);
+    saveTextFile(`run-${runId.slice(0, 8)}.${kind}`, kind === "html" ? "text/html" : "text/markdown", body);
     toast.show(t("runReport.exported"), "success");
   };
 
   return (
-    <Modal open={run !== null} onClose={onClose} size="md" label={t("runReport.title")}>
+    <Modal open={report !== null} onClose={onClose} size="md" label={t("runReport.title")}>
       {report ? (
         <>
           <DialogHeader title={t("runReport.title")} subtitle={report.botName} onClose={onClose} />

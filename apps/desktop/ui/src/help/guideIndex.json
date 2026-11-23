@@ -133,6 +133,7 @@
       "Voice call (desktop app)",
       "Slash commands",
       "Managing chats (desktop app)",
+      "Opening Praxi links (desktop app)",
       "Copying messages and Markdown export",
       "Unread markers",
       "Keyboard shortcuts and \"What's new\"",
@@ -400,6 +401,7 @@
     "title": "Install and first run",
     "headings": [
       "Option A: Windows desktop app",
+      "Desktop link support",
       "Option B: build the CLI from source",
       "Building the Windows installer yourself",
       "First run from the terminal",

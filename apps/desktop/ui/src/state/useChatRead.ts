@@ -26,7 +26,8 @@ export function useChatRead(
   host: string,
   chatId: string,
   activityMs: number,
-  messages: readonly { id: string; role: string; created_at_ms: number }[]
+  messages: readonly { id: string; role: string; created_at_ms: number }[],
+  external = false
 ): { seenUntilMs: number | null; dismiss: () => void } {
   const state = useReadState(host);
   const attended = useAttended();
@@ -35,8 +36,8 @@ export function useChatRead(
   const [dismissed, setDismissed] = useState<string | null>(null);
   const newest = messages.reduce((ms, m) => Math.max(ms, m.created_at_ms), activityMs);
   useEffect(() => {
-    if (attended && newest > 0) markChatRead(host, chatId, newest);
-  }, [attended, host, chatId, newest]);
+    if (!external && attended && newest > 0) markChatRead(host, chatId, newest);
+  }, [external, attended, host, chatId, newest]);
   const id = firstUnseenMessageId(messages, anchor.current.ms);
   const key = `${chatId}:${id}`;
   return { seenUntilMs: id && dismissed !== key ? anchor.current.ms : null, dismiss: () => setDismissed(key) };

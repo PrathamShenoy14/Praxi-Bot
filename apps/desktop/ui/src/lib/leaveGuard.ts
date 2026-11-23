@@ -14,23 +14,26 @@ export interface LeaveGuard {
 export type LeaveResult = "went" | "pending" | "blocked";
 
 export interface LeaveRegistry {
-  register: (guard: LeaveGuard) => () => void;
+  register: (guard: LeaveGuard, silentOnly?: boolean) => () => void;
   /** Run `action` now, after the user agreed, or never (a save is in flight). */
   attempt: (action: () => void) => LeaveResult;
+  /** External navigation can proceed only when no guard is dirty or busy. */
+  attemptSilently: (action: () => void) => LeaveResult;
 }
 
 export function createLeaveRegistry(): LeaveRegistry {
-  const guards: LeaveGuard[] = [];
+  const guards: { guard: LeaveGuard; silentOnly: boolean }[] = [];
   return {
-    register(guard) {
-      guards.push(guard);
+    register(guard, silentOnly = false) {
+      const entry = { guard, silentOnly };
+      guards.push(entry);
       return () => {
-        const i = guards.indexOf(guard);
+        const i = guards.indexOf(entry);
         if (i >= 0) guards.splice(i, 1);
       };
     },
     attempt(action) {
-      const live = [...guards].reverse(); // the topmost dialog asks first
+      const live = guards.filter((entry) => !entry.silentOnly).map((entry) => entry.guard).reverse();
       const states = live.map((g) => g.state());
       if (states.some((s) => s.busy)) return "blocked";
       const dirty = live.filter((_, i) => states[i]?.dirty);
@@ -48,6 +51,14 @@ export function createLeaveRegistry(): LeaveRegistry {
       };
       ask(dirty);
       return "pending";
+    },
+    attemptSilently(action) {
+      if (guards.some(({ guard }) => {
+        const { dirty, busy } = guard.state();
+        return dirty || busy;
+      })) return "blocked";
+      action();
+      return "went";
     }
   };
 }

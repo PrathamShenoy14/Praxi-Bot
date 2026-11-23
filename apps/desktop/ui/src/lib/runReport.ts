@@ -10,6 +10,7 @@
 import { describeTool, isDiscoveryTool, stepPhase } from "./toolLabels.ts";
 import { detectSecrets } from "./secretDetect.ts";
 import type { QuestionItem, RunState, SecretRequestItem, ToolItem } from "../state/timeline.ts";
+import type { Run } from "../api/types.ts";
 
 export type ReportT = (key: string, values?: Record<string, unknown>) => string;
 
@@ -28,8 +29,7 @@ export interface RunReport {
   botName: string;
   startedMs: number;
   finishedMs: number | null;
-  /** `done`, `failed`, `stopped` or `unfinished`. */
-  outcome: "done" | "failed" | "stopped" | "unfinished";
+  outcome: "done" | "failed" | "stopped" | "unfinished" | "queued" | "running" | "waitingApproval" | "paused";
   /** Scrubbed failure text, when the run failed. */
   error: string | null;
   steps: ReportStep[];
@@ -154,6 +154,25 @@ export function buildRunReport(
     outcome,
     error: outcome === "failed" && run.error ? scrubText(run.error) : null,
     steps
+  };
+}
+
+const DTO_OUTCOMES = new Map<string, RunReport["outcome"]>([
+  ["succeeded", "done"], ["failed", "failed"], ["cancelled", "stopped"],
+  ["queued", "queued"], ["running", "running"], ["waiting_approval", "waitingApproval"], ["paused", "paused"]
+]);
+
+/** An older or chatless run can still have a daemon record after its event history has gone. */
+export function buildRunReportFromFacts(run: Run, botName: string): RunReport {
+  const outcome = DTO_OUTCOMES.get(run.state) ?? "unfinished";
+  const finished = outcome === "done" || outcome === "failed" || outcome === "stopped";
+  return {
+    botName: scrubText(botName, 80),
+    startedMs: run.created_at_ms,
+    finishedMs: finished ? run.updated_at_ms : null,
+    outcome,
+    error: null,
+    steps: []
   };
 }
 

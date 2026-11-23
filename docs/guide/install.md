@@ -48,6 +48,18 @@ the app).
 Desktop control (clicking and typing in other apps) is implemented for Windows
 only. On other systems the daemon runs, but without desktop tools.
 
+## Desktop link support
+
+The Windows installer registers `praxi://` links for your account. Opening one
+starts the desktop app or brings its existing window forward. Uninstalling
+removes the link handler for that installation. See
+[Opening Praxi links](chatting-and-approvals.md#opening-praxi-links-desktop-app)
+for the supported destinations.
+
+Linux and macOS desktop bundle integration is pending. On Linux, a portable
+build without an installed desktop entry has no handler for `praxi://`
+links. On macOS, registration comes from the installed application bundle.
+
 ## Option B: build the CLI from source
 
 Requirements: Rust 1.89 or newer, a C toolchain (MSVC build tools on Windows),
