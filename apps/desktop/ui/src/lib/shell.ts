@@ -1,7 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauriRuntime } from "../overlay/events";
+import { subscribeDeepLinks, type createDeepLinkDispatcher, type DeepLink } from "./deepLinks";
 
 /** Events the Rust shell emits (tray menu, notification clicks). */
 export const SHELL_EVENT_NOTIFICATION_ACTIVATED = "shell:notification_activated";
@@ -30,6 +32,18 @@ export interface ToastAction {
 /** Toast button presses since the last call (queued by the shell; never trusted from events). */
 export async function takeNotificationActions(): Promise<ToastAction[]> {
   return isTauriRuntime() ? invoke<ToastAction[]>("notify_take_actions") : [];
+}
+
+/** The main window listens for a wake and takes only parsed intents from the native mailbox. */
+export function onDeepLinkPending(dispatcher: ReturnType<typeof createDeepLinkDispatcher>): () => void {
+  if (!isTauriRuntime()) return () => {};
+  const window = getCurrentWebviewWindow();
+  if (window.label !== "main") return () => {};
+  return subscribeDeepLinks(
+    dispatcher,
+    (wake) => window.listen("shell:deep_link_pending", wake),
+    () => invoke<DeepLink | null>("deep_link_take")
+  );
 }
 
 /** Whether the user is looking at the main window. */

@@ -78,21 +78,39 @@ test("an unregistered (closed) dialog no longer guards", () => {
   assert.equal(ran, 1);
 });
 
+test("silent navigation blocks dirty and busy work without changing normal guard behavior", () => {
+  const reg = createLeaveRegistry();
+  const asked: string[] = [];
+  const releaseDraft = reg.register(guard(true, false, asked, "draft"), true);
+  const releaseEdit = reg.register(guard(false, true, asked, "edit"));
+  let ran = 0;
+  assert.equal(reg.attemptSilently(() => ran++), "blocked");
+  releaseEdit();
+  assert.equal(reg.attemptSilently(() => ran++), "blocked");
+  assert.deepEqual(asked, []);
+  assert.equal(reg.attempt(() => ran++), "went");
+  releaseDraft();
+  assert.equal(reg.attemptSilently(() => ran++), "went");
+  assert.equal(ran, 2);
+});
+
 // Wiring (source level - the UI tests run without a DOM): every route change of the shell goes
 // through `go`, the bot dialogs register a guard, and the palette / panel use the same gate.
 test("App routes every user navigation through the leave gate", () => {
   const app = read("../App.tsx");
-  // Only the mock review hooks and the post-delete jump may set the route directly.
+  // External deep links use the silent gate. The mock review and post-delete routes are internal.
   const direct = app.split("\n").filter((l) => /\bsetRoute\(/.test(l));
   const allowed = direct.filter(
     (l) =>
       l.includes("leave.attempt(() => setRoute(next))") ||
+      l.includes('setRoute(destination.kind === "chat" ? { ...destination, external: true } : destination)') ||
       l.includes('setRoute({ kind: "home" });') ||
       /screen === "(bot|myBots|schedules|needs|home)/.test(l) ||
       l.includes('kind: "chat", chatId: "33333333') ||
       l.includes('setRoute({ kind: "onboarding" });')
   );
   assert.deepEqual(direct.filter((l) => !allowed.includes(l)), []);
+  assert.match(app, /leave\.attemptSilently\(\(\) => \{[\s\S]*?setRoute\(destination/);
   assert.match(app, /leave\.attempt\(\(\) => \{\s*setPanelOpen\(false\)/);
   for (const dialog of ["BotEditModal.tsx", "../components/AddSkillModal.tsx"]) {
     const src = read(dialog.startsWith("..") ? dialog : `../views/${dialog}`);

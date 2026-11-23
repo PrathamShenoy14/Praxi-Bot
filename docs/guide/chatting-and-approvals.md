@@ -88,6 +88,23 @@ Each chat row has an overflow (`...`) menu backed by `PATCH /v1/chats/{id}` and
   messages. Deletion is blocked while a run is active in that chat—stop the run
   first.
 
+### Opening Praxi links (desktop app)
+
+A Praxi link can open a bot, chat, or run from a browser or another app. The
+link contains the ID of something that already exists. Use the lowercase,
+hyphenated ID in one of these forms.
+
+| Link | What opens |
+| --- | --- |
+| `praxi://bot/<id>` | The same view as selecting that bot in the left rail |
+| `praxi://chat/<id>` | That chat |
+| `praxi://run/<id>` | That run's step list and status |
+
+The link looks on the computer already selected in Praxi. If the item has
+been removed or is on another computer, Praxi shows a message. Opening a link
+doesn't send a message, start a run, or answer an approval. See
+[Install and first run](install.md#desktop-link-support) for platform support.
+
 ### Copying messages and Markdown export
 
 - **Copy a message**: hovering or focusing any user or assistant message reveals

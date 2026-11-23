@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef } from "react";
+import { createContext, type ReactNode, useContext, useLayoutEffect, useMemo, useRef } from "react";
 import { createLeaveRegistry, type LeaveGuard, type LeaveRegistry } from "../lib/leaveGuard";
 
 const LeaveContext = createContext<LeaveRegistry | null>(null);
@@ -23,16 +23,16 @@ export function useLeaveRegistry(): LeaveRegistry {
 }
 
 /** Register a dialog's unsaved-changes guard for as long as it is mounted. */
-export function useLeaveGuard(guard: LeaveGuard) {
+export function useLeaveGuard(guard: LeaveGuard, silentOnly = false) {
   const registry = useLeaveRegistry();
   const latest = useRef(guard);
   latest.current = guard;
-  useEffect(
+  useLayoutEffect(
     () =>
       registry.register({
         state: () => latest.current.state(),
         confirm: (proceed) => latest.current.confirm(proceed)
-      }),
-    [registry]
+      }, silentOnly),
+    [registry, silentOnly]
   );
 }

@@ -2393,6 +2393,12 @@
     "summary": "{{done}} verschoben, {{skipped}} übersprungen, {{failed}} fehlgeschlagen.",
     "title": "Diesen Server zum Zuhause meiner Bots machen"
   },
+  "deepLinks": {
+    "blocked": "Schließe deine aktuelle Arbeit ab, bevor du diesen Link öffnest.",
+    "invalid": "Dieser Praxi-Link ist ungültig.",
+    "missing": "Das Ziel dieses Links ist auf dem ausgewählten Computer nicht verfügbar.",
+    "offline": "Der ausgewählte Computer ist nicht erreichbar. Öffne den Link erneut, sobald er online ist."
+  },
   "dev": {
     "runningLabel": "Bot-Lauf aktiv",
     "sectionTitle": "Entwickler",
@@ -4565,13 +4571,18 @@
     "exported": "Bericht gespeichert",
     "footer": "Mit Praxi erstellt. Private Details sind nicht enthalten.",
     "hint": "Sieh Schritt für Schritt, was der Bot in diesem Lauf getan hat",
+    "noRecordedSteps": "Für diesen Lauf sind keine aufgezeichneten Schritte verfügbar.",
     "noSteps": "Der Bot hat in diesem Lauf keine Werkzeuge benutzt.",
     "outcome": "Ergebnis",
     "outcomes": {
       "done": "Fertig",
       "failed": "Fehlgeschlagen",
+      "paused": "Pausiert",
+      "queued": "In der Warteschlange",
+      "running": "Läuft",
       "stopped": "Von dir gestoppt",
-      "unfinished": "Nicht abgeschlossen"
+      "unfinished": "Nicht abgeschlossen",
+      "waitingApproval": "Wartet auf Genehmigung"
     },
     "privacy": "Private Details bleiben draußen: Was eingegeben, gelesen oder beantwortet wurde, wird nicht gezeigt, und alles, was wie ein Passwort oder Schlüssel aussieht, wird verborgen.",
     "started": "Gestartet",

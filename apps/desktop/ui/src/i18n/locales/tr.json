@@ -2393,6 +2393,12 @@
     "summary": "{{done}} taşındı, {{skipped}} atlandı, {{failed}} başarısız.",
     "title": "Bu sunucuyu botlarımın evi yap"
   },
+  "deepLinks": {
+    "blocked": "Bu bağlantıyı açmadan önce mevcut işini bitir.",
+    "invalid": "Bu Praxi bağlantısı geçersiz.",
+    "missing": "Bağlantının hedefi seçili bilgisayarda bulunamıyor.",
+    "offline": "Seçili bilgisayara ulaşılamıyor. Çevrimiçi olduğunda bağlantıyı yeniden dene."
+  },
   "dev": {
     "runningLabel": "Bot çalışması etkin",
     "sectionTitle": "Geliştirici",
@@ -4565,13 +4571,18 @@
     "exported": "Rapor kaydedildi",
     "footer": "Praxi ile hazırlandı. Özel ayrıntılar dışarıda bırakıldı.",
     "hint": "Botun bu çalışmada neler yaptığını adım adım gör",
+    "noRecordedSteps": "Bu çalışmanın adım geçmişine ulaşılamıyor.",
     "noSteps": "Bot bu çalışmada hiçbir araç kullanmadı.",
     "outcome": "Sonuç",
     "outcomes": {
       "done": "Bitti",
       "failed": "Başarısız",
+      "paused": "Duraklatıldı",
+      "queued": "Sırada",
+      "running": "Sürüyor",
       "stopped": "Senin tarafından durduruldu",
-      "unfinished": "Bitmedi"
+      "unfinished": "Bitmedi",
+      "waitingApproval": "Onay bekliyor"
     },
     "privacy": "Özel ayrıntılar dışarıda bırakılır: yazılanlar, okunanlar ve verdiğin cevaplar gösterilmez; parola ya da anahtara benzeyen her şey gizlenir.",
     "started": "Başlangıç",

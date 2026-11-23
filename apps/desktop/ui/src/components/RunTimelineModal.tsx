@@ -2,9 +2,11 @@ import { Download } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "ui";
+import type { Run } from "../api/types";
 import { formatElapsed } from "../lib/activityPanel";
 import {
   buildRunReport,
+  buildRunReportFromFacts,
   renderHtml,
   renderMarkdown,
   saveTextFile,
@@ -18,21 +20,25 @@ import { useToast } from "./Toast";
 import dialog from "./Dialog.module.css";
 import styles from "./RunTimelineModal.module.css";
 
-/** What a bot did in one finished run, step by step, with redacted report exports. */
+/** What a bot did in one run, step by step, with redacted report exports. */
 export function RunTimelineModal({
   run,
+  fallback,
   botName,
   onClose
 }: {
   run: RunState | null;
+  fallback?: Run;
   botName: string;
   onClose: () => void;
 }) {
   const { t, i18n } = useTranslation();
   const toast = useToast();
+  const runId = run?.id ?? fallback?.id;
   const report = useMemo(
-    () => (run ? buildRunReport(run, botName, (k, v) => t(k, v) as string, formatElapsed) : null),
-    [run, botName, t]
+    () => run ? buildRunReport(run, botName, (k, v) => t(k, v) as string, formatElapsed)
+      : fallback ? buildRunReportFromFacts(fallback, botName) : null,
+    [run, fallback, botName, t]
   );
   const text = useMemo((): ReportText => {
     const time = (ms: number) =>
@@ -52,26 +58,28 @@ export function RunTimelineModal({
     return {
       title: t("runReport.title"),
       facts,
-      noSteps: t("runReport.noSteps"),
+      noSteps: run ? t("runReport.noSteps") : t("runReport.noRecordedSteps"),
       footer: t("runReport.footer"),
       language: i18n.language,
       time
     };
-  }, [report, t, i18n.language]);
+  }, [report, run, t, i18n.language]);
 
   const save = (kind: "html" | "md" | "json") => {
-    if (!report || !run) return;
+    if (!report || !runId) return;
     if (kind === "json") {
+      // The JSON export needs the live step record; a fallback summary has none.
+      if (!run) return;
       saveTextFile("run-report.json", "application/json", renderRunReportJson(run));
     } else {
       const body = kind === "html" ? renderHtml(report, text) : renderMarkdown(report, text);
-      saveTextFile(`run-${run.id.slice(0, 8)}.${kind}`, kind === "html" ? "text/html" : "text/markdown", body);
+      saveTextFile(`run-${runId.slice(0, 8)}.${kind}`, kind === "html" ? "text/html" : "text/markdown", body);
     }
     toast.show(t("runReport.exported"), "success");
   };
 
   return (
-    <Modal open={run !== null} onClose={onClose} size="md" label={t("runReport.title")}>
+    <Modal open={report !== null} onClose={onClose} size="md" label={t("runReport.title")}>
       {report ? (
         <div className={dialog.root}>
           <DialogHeader title={t("runReport.title")} subtitle={report.botName} onClose={onClose} />
@@ -101,9 +109,11 @@ export function RunTimelineModal({
             <Button variant="ghost" onClick={() => save("md")}>
               <Download aria-hidden="true" />{t("runReport.exportMarkdown")}
             </Button>
-            <Button variant="ghost" onClick={() => save("json")}>
-              <Download aria-hidden="true" />{t("runReport.exportJson")}
-            </Button>
+            {run ? (
+              <Button variant="ghost" onClick={() => save("json")}>
+                <Download aria-hidden="true" />{t("runReport.exportJson")}
+              </Button>
+            ) : null}
             <Button onClick={() => save("html")}>
               <Download aria-hidden="true" />{t("runReport.exportHtml")}
             </Button>

@@ -38,6 +38,7 @@ import type { LiveChatSlots } from "./LiveViewerChat";
 import { ownerKey } from "../lib/ownerKey";
 import { chatActivityMs } from "../lib/unread";
 import { useChatRead } from "../state/useChatRead";
+import { useLeaveGuard } from "../state/LeaveGuard";
 import { NewMessagesDivider } from "../components/NewMessagesDivider";
 import { BotAvatar, Button } from "ui";
 import { isMockMode } from "../api/mockMode";
@@ -230,6 +231,7 @@ function canOfferRemember(run: RunState): boolean {
 
 export function ChatView({
   chatId,
+  external = false,
   jumpMessageId,
   jumpRequestId,
   onBack,
@@ -242,6 +244,7 @@ export function ChatView({
   liveChatSlots
 }: {
   chatId: string;
+  external?: boolean;
   jumpMessageId?: string;
   jumpRequestId?: number;
   /** Present only when there is a page to go back to; without it the header has no arrow. */
@@ -343,6 +346,13 @@ export function ChatView({
   const [resending, setResending] = useState(false);
   const [attachments] = useState(() => new AttachmentDraft());
   const files = useSyncExternalStore(attachments.subscribe, attachments.snapshot);
+  useLeaveGuard({
+    state: () => ({
+      dirty: text.length > 0 || files.length > 0 || editingId !== null,
+      busy: sending || resending
+    }),
+    confirm: () => {}
+  }, true);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   /** The run the daemon named for the message just sent, until the run list shows it. */
@@ -421,14 +431,18 @@ export function ChatView({
       el.style.height = `${Math.min(el.scrollHeight, parseFloat(getComputedStyle(el).maxHeight))}px`;
     }
   }, [text]);
-  const mountedAt = useRef(Date.now());
+  const followNewSince = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    followNewSince.current = external ? null : Date.now();
+    return () => { followNewSince.current = null; };
+  }, [external]);
   const switchedFor = useRef(new Set<string>());
 
   const chatRuns = useMemo(
     () => topLevelRuns(events, chatId),
     [events, chatId]
   );
-  useAutoSpeak(chatId, chatRuns);
+  useAutoSpeak(chatId, chatRuns, external);
   const finishedCount = chatRuns.filter(
     (r) => r.finishedMs !== undefined
   ).length;
@@ -436,13 +450,15 @@ export function ChatView({
   // `/new` typed in the chat: the daemon starts a new chat and says so in its
   // reply; follow it (only for turns that finish while this view is open).
   useEffect(() => {
+    const since = followNewSince.current;
+    if (since === null) return;
     for (const run of chatRuns) {
       const r = run.route?.route;
       if (
         r?.kind !== "command" ||
         r.name !== "new" ||
         run.finishedMs === undefined ||
-        run.finishedMs < mountedAt.current ||
+        run.finishedMs < since ||
         run.error !== null ||
         switchedFor.current.has(run.id)
       ) {
@@ -454,12 +470,13 @@ export function ChatView({
         void refreshChats()
           .catch(() => {})
           .then(() => {
+            if (followNewSince.current !== since) return;
             toast.show(t("chat.newChatStarted"), "success");
             onSwitchChat(id);
           });
       }
     }
-  }, [chatRuns, onSwitchChat, refreshChats, toast, t]);
+  }, [chatRuns, external, onSwitchChat, refreshChats, toast, t]);
 
   const loadMessages = useCallback(async () => {
     if (!client) {
@@ -505,7 +522,8 @@ export function ChatView({
     client?.baseUrl ?? "",
     chatId,
     chatActivityMs(runs, needs, chatId),
-    messages
+    messages,
+    external
   );
 
   const entries = useMemo(() => {
@@ -1095,6 +1113,7 @@ export function ChatView({
   useEffect(() => {
     const was = wasActive.current;
     wasActive.current = active;
+    if (external) return;
     if (was && !active && stoppedByUser.current) {
       stoppedByUser.current = false;
       return;
@@ -1105,7 +1124,7 @@ export function ChatView({
       void deliverQueued(message, "queue");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, queue]);
+  }, [active, queue, external]);
   const sendNow = (id: string) => {
     const { message, rest } = takeForNow(queue, id);
     if (message) {

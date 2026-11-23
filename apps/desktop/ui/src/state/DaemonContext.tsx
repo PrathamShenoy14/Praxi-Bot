@@ -70,6 +70,10 @@ export const STARTUP_STUCK_MS = 15_000;
 /** The id of this computer in the computer selector. */
 export const LOCAL_COMPUTER = "local";
 
+type RefreshList<T> = (current?: () => boolean) => Promise<T[] | null>;
+
+const isCurrent = () => true;
+
 /** One entry of the computer selector. */
 export interface ComputerEntry {
   id: string;
@@ -136,9 +140,9 @@ export interface DaemonContextValue {
   runs: Run[];
   events: EventsState;
   needs: NeedsYouEntry[];
-  refreshBots: () => Promise<void>;
-  refreshChats: () => Promise<void>;
-  refreshRuns: () => Promise<void>;
+  refreshBots: RefreshList<Bot>;
+  refreshChats: RefreshList<Chat>;
+  refreshRuns: RefreshList<Run>;
   /** Chat ids with an in-flight rename/pin/archive/delete mutation. */
   pendingChatIds: ReadonlySet<string>;
   /** Optimistically rename, pin or archive a chat, rolling back if the daemon rejects it. */
@@ -188,6 +192,9 @@ export interface DaemonContextValue {
   homeStale: boolean;
   /** Which computer the whole UI talks to: `local` or a paired host's key. */
   activeComputerId: string;
+  /** Desktop startup must finish selecting the saved home before resolving external links. */
+  initialComputer: "waiting" | "ready" | "offline";
+  isActiveComputer: (id: string) => boolean;
   /** This computer plus every paired host. */
   computers: ComputerEntry[];
   /** Name of the active host (null while this computer is active). */
@@ -264,26 +271,27 @@ function useDaemonData(conn: Connection | null, computerId: string): DaemonData 
   const [runs, setRuns] = useState<Run[]>([]);
   const [events, dispatch] = useReducer(reducer, EMPTY_EVENTS);
 
-  const [client, setClient] = useState<ApiClient | null>(null);
+  const [session, setSession] = useState<{ conn: Connection; client: ApiClient } | null>(null);
+  const client = session && session.conn === conn ? session.client : null;
   useEffect(() => {
     if (!conn) {
-      setClient(null);
+      setSession(null);
       return undefined;
     }
     if (conn.base_url !== MOCK_BASE_URL) {
       const made = new ApiClient(conn);
-      setClient(made);
+      setSession({ conn, client: made });
       // Switching computers (or leaving the host) drops this connection's requests in flight.
       return () => made.dispose();
     }
     // Mock code is only reachable in dev builds or with VITE_MOCK=1.
     if (!(import.meta.env.DEV || import.meta.env.VITE_MOCK === "1")) {
-      setClient(null);
+      setSession(null);
       return undefined;
     }
     let live = true;
     void import("../api/mock").then((m) => {
-      if (live) setClient(new m.MockApiClient());
+      if (live) setSession({ conn, client: new m.MockApiClient() });
     });
     return () => {
       live = false;
@@ -302,28 +310,34 @@ function useDaemonData(conn: Connection | null, computerId: string): DaemonData 
     []
   );
 
-  const refreshBots = useCallback(async () => {
+  const refreshBots = useCallback<RefreshList<Bot>>(async (current = isCurrent) => {
     const c = clientRef.current;
-    if (c) {
-      setBots(await c.listBots());
-    }
+    if (!c) return null;
+    const fresh = await c.listBots();
+    if (c !== clientRef.current || !current()) return null;
+    setBots(fresh);
+    return fresh;
   }, []);
   // Chat ids whose delete is in flight or done, and ids with a patch in flight: a list
   // refresh must not resurrect the first or undo the optimistic copy of the second.
   const deletedChatIds = useRef(new Set<string>());
   const patchingChatIds = useRef(new Set<string>());
-  const refreshChats = useCallback(async () => {
+  const refreshChats = useCallback<RefreshList<Chat>>(async (current = isCurrent) => {
     const c = clientRef.current;
-    if (c) {
-      const fresh = await c.listChats();
-      setChats((prev) => mergeChatRefresh(fresh, prev, deletedChatIds.current, patchingChatIds.current));
-    }
+    if (!c) return null;
+    const fresh = await c.listChats();
+    if (c !== clientRef.current || !current()) return null;
+    const merge = (prev: Chat[]) => mergeChatRefresh(fresh, prev, deletedChatIds.current, patchingChatIds.current);
+    setChats(merge);
+    return merge(chatsRef.current);
   }, []);
-  const refreshRuns = useCallback(async () => {
+  const refreshRuns = useCallback<RefreshList<Run>>(async (current = isCurrent) => {
     const c = clientRef.current;
-    if (c) {
-      setRuns(await c.listRuns());
-    }
+    if (!c) return null;
+    const fresh = await c.listRuns();
+    if (c !== clientRef.current || !current()) return null;
+    setRuns(fresh);
+    return fresh;
   }, []);
 
   const setChatPending = useCallback((chatId: string, on: boolean) => {
@@ -556,6 +570,8 @@ export function DaemonProvider({ children }: { children: ReactNode }) {
   const [hostList, setHostList] = useState<HostLinkList | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [home, setHome] = useState<Home>(LOCAL_HOME);
+  const [homeRead, setHomeRead] = useState<"waiting" | "ready" | "offline">("waiting");
+  const [initialComputerSelected, setInitialComputerSelected] = useState(false);
   const [workLocalNow, setWorkLocalNowState] = useState(() => !isMockMode() && readRunPlace() === "this");
   const setWorkLocalNow = useCallback((on: boolean) => {
     setWorkLocalNowState(on);
@@ -575,6 +591,7 @@ export function DaemonProvider({ children }: { children: ReactNode }) {
   localClientRef.current = localClient;
   const activeIdRef = useRef(activeId);
   activeIdRef.current = activeId;
+  const isActiveComputer = useCallback((id: string) => activeIdRef.current === id, []);
 
   // Review states of a selected host in mock mode (`?host=empty|bots|offline`).
   useEffect(() => {
@@ -693,14 +710,17 @@ export function DaemonProvider({ children }: { children: ReactNode }) {
     }
     try {
       const list = await c.listHosts();
+      if (c !== localClientRef.current) return;
       setHostList(list);
       // Which host (if any) the owner made the home of the bots.
-      const info = await c.homeInfo().catch(() => null);
-      if (info) {
-        setHome(homeFromInfo(info.host_id, list.hosts));
-      }
+      const info = await c.homeInfo();
+      if (c !== localClientRef.current) return;
+      setHome(homeFromInfo(info.host_id, list.hosts));
+      setHomeRead("ready");
     } catch {
-      // keep the last list; the next poll retries
+      if (c === localClientRef.current) {
+        setHomeRead((state) => state === "ready" ? state : "offline");
+      }
     }
   }, []);
   const refreshHome = refreshHosts;
@@ -761,6 +781,13 @@ export function DaemonProvider({ children }: { children: ReactNode }) {
   // The app follows the home by itself: at startup, after a reconnect and when the owner adopts a
   // host. Only the explicit "work on this computer for now" mode keeps it on this computer.
   const wanted = wantedComputer(home, workLocalNow, LOCAL_COMPUTER);
+  const initialSelectionReady = (homeRead === "ready" || isMockMode() || workLocalNow) && activeId === wanted;
+  useEffect(() => {
+    if (initialSelectionReady) setInitialComputerSelected(true);
+  }, [initialSelectionReady]);
+  const initialComputer = initialComputerSelected || initialSelectionReady
+    ? "ready"
+    : phase === "error" || homeRead === "offline" ? "offline" : "waiting";
   useEffect(() => {
     if (mockHostScenario()) {
       return;
@@ -908,6 +935,8 @@ export function DaemonProvider({ children }: { children: ReactNode }) {
     localConn,
     homeStale: false,
     activeComputerId: activeId,
+    initialComputer,
+    isActiveComputer,
     computers,
     activeHostName: null,
     hostState: null,
