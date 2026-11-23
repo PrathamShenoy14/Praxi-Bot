@@ -37,6 +37,11 @@
     }
   },
   "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["praxi"]
+      }
+    },
     "updater": {
       "pubkey": "",
       "endpoints": [],

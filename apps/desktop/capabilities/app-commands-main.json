@@ -5,6 +5,7 @@
     "main"
   ],
   "permissions": [
+    "allow-deep-link-take",
     "allow-open-composio-link",
     "allow-get-control-state",
     "allow-begin-action",

@@ -35,9 +35,11 @@ thiserror.workspace = true
 tokio.workspace = true
 tauri-plugin-global-shortcut = "2"
 
+[target.'cfg(any(windows, target_os = "linux", target_os = "macos"))'.dependencies]
+tauri-plugin-single-instance = "2"
+
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.38.2"
-tauri-plugin-single-instance = "2"
 tauri-winrt-notification = "0.7"
 windows = { workspace = true, features = [
     "Win32_Foundation",

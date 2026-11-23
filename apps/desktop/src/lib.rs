@@ -4,6 +4,7 @@ pub mod browser;
 pub mod command_names;
 pub mod control;
 pub mod daemon;
+mod deep_link;
 pub mod listener;
 mod microphone;
 pub mod prereq;
@@ -32,6 +33,28 @@ use widget_visibility::WidgetVisibility;
 use window_gate::{MAIN_AND_WIDGET, MAIN_ONLY, require_window};
 
 const MENU_ID_SIMULATE_RUN: &str = "dev.simulate_bot_run";
+const DEEP_LINK_PENDING_EVENT: &str = "shell:deep_link_pending";
+
+#[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
+fn deep_link_take(
+    window: Window,
+    pending: State<'_, deep_link::Pending>,
+) -> Result<Option<deep_link::Activation>, String> {
+    require_window(&window, MAIN_ONLY)?;
+    Ok(pending.take())
+}
+
+fn focus_main_for_launch(app: &AppHandle, notify: bool) {
+    shell::focus_main(app);
+    if notify {
+        let _ = app.emit_to(
+            tauri::EventTarget::webview_window("main"),
+            DEEP_LINK_PENDING_EVENT,
+            (),
+        );
+    }
+}
 
 /// Open an approved Composio URL in the operating system browser.
 #[tauri::command]
@@ -1117,13 +1140,29 @@ pub fn run() {
 
     let (update_plugin, update_runtime) = update::init();
 
-    let builder = tauri::Builder::default();
+    #[cfg(any(windows, target_os = "linux"))]
+    let cold_link = deep_link::from_argv(&std::env::args_os().collect::<Vec<_>>());
+    #[cfg(not(any(windows, target_os = "linux")))]
+    let cold_link = None;
+    // Seed the slot before the plugin can receive a newer activation. The
+    // webview can take it on mount even if it missed the signal at startup.
+    let builder = tauri::Builder::default().manage(deep_link::Pending::new(cold_link));
     // A second launch (Start menu, autostart plus a manual start, deep link)
     // must not start another daemon and tray: it focuses the running window
     // instead. This plugin has to be registered before every other one.
-    #[cfg(windows)]
-    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-        shell::focus_main(app);
+    #[cfg(any(windows, target_os = "linux", target_os = "macos"))]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+        let activation = if cfg!(any(windows, target_os = "linux")) {
+            deep_link::from_argv(&args)
+        } else {
+            None
+        };
+        let notify = activation.is_some();
+        if let Some(activation) = activation {
+            app.state::<deep_link::Pending>().replace(activation);
+        }
+        let app_handle = app.clone();
+        let _ = app.run_on_main_thread(move || focus_main_for_launch(&app_handle, notify));
     }));
     let app = builder
         .plugin(tauri_plugin_store::Builder::default().build())
@@ -1138,6 +1177,9 @@ pub fn run() {
         .manage(daemon_handle)
         .setup(move |app| {
             let app_handle = app.handle().clone();
+            if app.state::<deep_link::Pending>().has_pending() {
+                focus_main_for_launch(&app_handle, true);
+            }
             #[cfg(windows)]
             microphone::install(&app_handle)?;
             control_for_setup.set_sink(Arc::new(TauriOverlaySink {
@@ -1195,6 +1237,7 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            deep_link_take,
             open_composio_link,
             get_control_state,
             is_human_driving,
@@ -1242,7 +1285,19 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    app.run(move |_app, event| {
+    app.run(move |app_handle, event| {
+        #[cfg(not(target_os = "macos"))]
+        let _ = app_handle;
+        #[cfg(target_os = "macos")]
+        if let RunEvent::Opened { urls } = &event {
+            // Launch Services delivers these as already-parsed URLs via Tauri.
+            if let Some(activation) =
+                deep_link::from_inputs(urls.iter().map(|url| url.as_str().as_bytes()))
+            {
+                app_handle.state::<deep_link::Pending>().replace(activation);
+                focus_main_for_launch(app_handle, true);
+            }
+        }
         if matches!(event, RunEvent::Exit) {
             // Stop the daemon only if this app started it.
             daemon_for_exit.stop();
@@ -1475,6 +1530,7 @@ mod acl_tests {
     /// with the allow-list constant they must check. Everything else must be
     /// listed in `ACL_ONLY`, so a new command has to be classified here.
     const GATED: &[(&str, &str)] = &[
+        ("deep_link_take", "MAIN_ONLY"),
         ("open_composio_link", "MAIN_ONLY"),
         ("begin_action", "MAIN_ONLY"),
         ("start_bot_run", "MAIN_ONLY"),
@@ -1677,6 +1733,7 @@ mod acl_tests {
         // finish_bot_run / ack_stop are reserved for card 237 PR C and main only.
         assert!(commands_for("main").contains("finish_bot_run"));
         assert!(commands_for("main").contains("ack_stop"));
+        assert!(commands_for("main").contains("deep_link_take"));
     }
 
     #[test]
@@ -1704,6 +1761,7 @@ mod acl_tests {
             let allowed = commands_for(label);
             for sensitive in [
                 "quick_ask_configure",
+                "deep_link_take",
                 "start_bot_run",
                 "finish_bot_run",
                 "ack_stop",

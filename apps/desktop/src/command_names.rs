@@ -10,6 +10,7 @@
 /// Names are the Rust function names (`snake_case`), exactly as registered in
 /// `tauri::generate_handler!`.
 pub const COMMAND_NAMES: &[&str] = &[
+    "deep_link_take",
     "open_composio_link",
     "get_control_state",
     "is_human_driving",
