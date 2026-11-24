@@ -72,9 +72,9 @@ export function createDeepLinkDispatcher() {
       pending = null;
       if (typeof outcome === "string") latest.feedback(outcome);
       else if (!latest.open(outcome)) latest.feedback("blocked");
-    } else if (pending === request) {
-      pending = null;
     }
+    // Otherwise a stale result is dropped but the link stays pending: a reconnect retries it
+    // on the new session below, and a computer change already discarded it in `update()`.
     lookingUp = false;
     void dispatch();
   }

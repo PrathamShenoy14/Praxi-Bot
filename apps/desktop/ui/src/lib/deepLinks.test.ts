@@ -137,6 +137,27 @@ test("new wake during a lookup replaces it before opening and never starts a con
   assert.deepEqual(feedback, []);
 });
 
+test("a reconnect during a lookup keeps the link and retries it on the new session", async () => {
+  const { dispatcher, scope, connection, take, reads, opened, feedback } = setup();
+  let resolveOld: (runs: Run[]) => void = () => assert.fail("no old lookup");
+  const old = new Promise<Run[]>((resolve) => { resolveOld = resolve; });
+  dispatcher.update({
+    ...scope,
+    connection: { ...connection, refreshRuns: () => { reads.push("old runs"); return old; } }
+  });
+  await take({ kind: "run", id: childRun.id });
+  dispatcher.update({ ...scope, connection: "waiting" });
+  resolveOld([childRun]);
+  await tick();
+  assert.deepEqual(opened, []);
+  assert.deepEqual(feedback, []);
+  dispatcher.update({ ...scope, connection: { ...connection, key: {} } });
+  await tick();
+  assert.deepEqual(reads, ["old runs", "runs"]);
+  assert.deepEqual(opened, [{ kind: "run", run: childRun }]);
+  assert.deepEqual(feedback, []);
+});
+
 test("switching computers discards the old destination and never looks it up on the new host", async () => {
   const { dispatcher, scope, connection, take, reads, opened, feedback, mutations } = setup();
   let resolveOld: (chats: Chat[]) => void = () => assert.fail("no old lookup");
@@ -229,5 +250,9 @@ test("desktop wiring keeps exact event history and forwards chat suppression wit
   assert.match(chatView, /useAutoSpeak\(chatId, chatRuns, external\)/);
   assert.match(chatView, /useChatRead\([\s\S]*?messages,\s*external/);
   assert.match(chatView, /followNewSince\.current = external \? null/);
-  assert.match(chatView, /if \(external\) return;[\s\S]*?takeForRunEnd/);
+  // An explicit `/new` sent after a link opened the chat still follows the new chat.
+  assert.match(chatView, /followNewSince\.current === null && parseSlashInput\(body\)\?\.name === "new"/);
+  // At run end a linked chat delivers only messages queued in this view, never ones queued before.
+  assert.match(chatView, /queuedHere\.current\.add\(id\);\s*updateQueue\(\(q\) => enqueue\(q, body, id,/);
+  assert.match(chatView, /takeForRunEnd\(queue, was, active, \(m\) => !external \|\| queuedHere\.current\.has\(m\.id\)\)/);
 });

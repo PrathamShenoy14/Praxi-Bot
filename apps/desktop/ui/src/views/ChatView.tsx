@@ -132,7 +132,8 @@ import {
   detectTrigger,
   APP_COMMAND_EVENT,
   isExportCommand,
-  appCommandFor
+  appCommandFor,
+  parseSlashInput
 } from "../lib/slash";
 import { appendDictation } from "../lib/dictation";
 import { FRESH, type HistoryNav, afterEdit, historyKey, userMessageTexts } from "../lib/composerHistory";
@@ -337,6 +338,8 @@ export function ChatView({
   // A pasted credential found in the draft before send (kinds only; the value stays in `text`).
   const [secretKinds, setSecretKinds] = useState<string[] | null>(null);
   const [queue, updateQueue] = useChatQueue(chatId);
+  /** Messages queued in this view. A chat opened from a link delivers only these at run end. */
+  const queuedHere = useRef(new Set<string>());
   // Up / Down recall this chat's earlier messages; the draft is kept (lib/composerHistory).
   const [nav, setNav] = useState<HistoryNav>(FRESH);
   const pendingCaret = useRef<number | null>(null);
@@ -876,10 +879,16 @@ export function ChatView({
     // A message typed while the bot works joins the queue as a "Sirada." bubble (slash commands such
     // as /stop still go straight to the daemon). It is delivered when the run ends or by "Simdi gonder".
     if (active && !body.startsWith("/") && !hasFiles) {
-      updateQueue((q) => enqueue(q, body, crypto.randomUUID(), Date.now()));
+      const id = crypto.randomUUID();
+      queuedHere.current.add(id);
+      updateQueue((q) => enqueue(q, body, id, Date.now()));
       setText("");
       scrollToEnd();
       return;
+    }
+    // A chat opened from a link never follows earlier `/new` results; a `/new` sent here does.
+    if (followNewSince.current === null && parseSlashInput(body)?.name === "new") {
+      followNewSince.current = Date.now();
     }
     attachments.locked = true;
     const attachmentSignal = attachments.signal;
@@ -1113,14 +1122,14 @@ export function ChatView({
   useEffect(() => {
     const was = wasActive.current;
     wasActive.current = active;
-    if (external) return;
     if (was && !active && stoppedByUser.current) {
       stoppedByUser.current = false;
       return;
     }
-    const { message, rest } = takeForRunEnd(queue, was, active);
+    // A link only opens the chat: what was queued before it stays queued until the user acts.
+    const { message } = takeForRunEnd(queue, was, active, (m) => !external || queuedHere.current.has(m.id));
     if (message) {
-      updateQueue(() => rest);
+      updateQueue((q) => removeQueued(q, message.id));
       void deliverQueued(message, "queue");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

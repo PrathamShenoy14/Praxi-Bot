@@ -36,6 +36,14 @@ test("a queued message stacks in order, can be removed, sent now, and is deliver
   assert.equal(end.message?.id, "a");
   assert.deepEqual(end.rest.map((m) => m.id), ["c"]);
   assert.equal(takeForRunEnd(EMPTY_QUEUE, true, false).message, null);
+
+  // held messages (queued before a link opened the chat) stay in place; later ones still go in order
+  const queuedHere = (m: { id: string }) => m.id === "c";
+  const held = takeForRunEnd(q, true, false, queuedHere);
+  assert.equal(held.message?.id, "c");
+  assert.deepEqual(held.rest.map((m) => m.id), ["a"]);
+  assert.equal(takeForRunEnd(held.rest, true, false, queuedHere).message, null, "nothing deliverable");
+  assert.equal(takeForRunEnd(q, true, true, queuedHere).message, null, "still running");
 });
 
 test("the round button is a stop while the bot works and the box is empty, an arrow otherwise", () => {

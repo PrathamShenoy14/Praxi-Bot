@@ -40,14 +40,17 @@ export function putBack(queue: MessageQueue, message: QueuedMessage): MessageQue
 /**
  * When the run ends the oldest queued message is delivered; the rest keep waiting for the run it
  * starts, so they arrive in the order they were typed and each answer sees the one before it.
+ * `canDeliver` holds back messages that may not go out on their own (they stay queued, in place).
  */
 export function takeForRunEnd(
   queue: MessageQueue,
   wasActive: boolean,
-  isActive: boolean
+  isActive: boolean,
+  canDeliver: (message: QueuedMessage) => boolean = () => true
 ): { message: QueuedMessage | null; rest: MessageQueue } {
-  if (!wasActive || isActive || queue.length === 0) {
+  const message = !wasActive || isActive ? undefined : queue.find(canDeliver);
+  if (!message) {
     return { message: null, rest: queue };
   }
-  return { message: queue[0], rest: queue.slice(1) };
+  return { message, rest: removeQueued(queue, message.id) };
 }
