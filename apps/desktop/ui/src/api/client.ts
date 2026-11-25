@@ -145,6 +145,7 @@ import type {
   CreateFillSecretInput,
   UpdateFillSecretInput,
   RevealFillSecretResponse,
+  FillGrantInfo,
   ScheduleInput,
   Scope,
   ScreenPrivilegesInput,
@@ -1185,6 +1186,19 @@ export class ApiClient {
   /** Delete a Vault item, its stored value, and any standing grants. */
   deleteFillSecret(name: string): Promise<void> {
     return this.request("DELETE", `/fill-secrets/${name.split("/").map(encodeURIComponent).join("/")}`);
+  }
+
+  /** List the standing "fill without asking" grants (`GET /v1/fill-grants`). */
+  listFillGrants(): Promise<FillGrantInfo[]> {
+    return this.request("GET", "/fill-grants");
+  }
+
+  /**
+   * Revoke a standing grant (`DELETE /v1/fill-grants/{id}`, owner-only). Bots then ask before filling
+   * that secret on that origin; revoking a secret's last grant turns its "Ask before use" back on.
+   */
+  revokeFillGrant(id: string): Promise<void> {
+    return this.request("DELETE", `/fill-grants/${encodeURIComponent(id)}`);
   }
 
   /** Reveal a Vault item's secret value after explicit owner confirmation. */

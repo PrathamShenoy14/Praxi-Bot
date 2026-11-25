@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { FillSecretInfo } from "../api/types.ts";
+import type { FillGrantInfo, FillSecretInfo } from "../api/types.ts";
 import { isValidSecretName } from "./secretDetect.ts";
 import {
   filterVaultItems,
+  groupGrants,
+  isLastGrant,
   normalizeOrigin,
   parseVaultCsv,
   pinnedBotIdentities,
@@ -110,4 +112,47 @@ test("pinnedBotIdentities prioritizes bot-bound and agentmail accounts", () => {
   const pinned = pinnedBotIdentities(accounts as never, bots);
   assert.equal(pinned[0].account.address, "atlas@agentmail.to");
   assert.equal(pinned[0].botName, "Atlas");
+});
+
+function grant(id: string, secret: string, origin: string): FillGrantInfo {
+  return { id, secret, origin, created_at_ms: 0 };
+}
+
+test("groupGrants groups by entry, sorts origins and groups by label", () => {
+  const items = [
+    item({ name: "login/zeta", site_name: "Zeta" }),
+    item({ name: "login/alpha", site_name: "alpha" }),
+  ];
+  const groups = groupGrants(
+    [
+      grant("1", "login/zeta", "https://z.example"),
+      grant("2", "login/alpha", "https://b.example"),
+      grant("3", "login/alpha", "https://a.example"),
+    ],
+    items,
+  );
+  assert.deepEqual(groups.map((g) => g.label), ["alpha", "Zeta"]);
+  assert.deepEqual(groups[0].grants.map((g) => g.id), ["3", "2"]);
+  assert.equal(groups[0].item?.name, "login/alpha");
+});
+
+test("groupGrants falls back to the raw name when the entry is missing", () => {
+  const groups = groupGrants([grant("1", "login/gone", "https://x.example")], []);
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].item, null);
+  assert.equal(groups[0].label, "login/gone");
+  assert.equal(groups[0].name, "login/gone");
+});
+
+test("groupGrants returns nothing for no grants", () => {
+  assert.deepEqual(groupGrants([], [item({})]), []);
+});
+
+test("isLastGrant is true only for the sole grant of an entry", () => {
+  const a = grant("1", "login/a", "https://a.example");
+  const b = grant("2", "login/a", "https://b.example");
+  const other = grant("3", "login/b", "https://a.example");
+  assert.equal(isLastGrant([a, b, other], a), false);
+  assert.equal(isLastGrant([a, other], a), true);
+  assert.equal(isLastGrant([a], a), true);
 });

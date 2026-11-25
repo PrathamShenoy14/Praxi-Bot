@@ -1,4 +1,4 @@
-import type { Bot, EmailAccount, FillSecretInfo, VaultKind } from "../api/types.ts";
+import type { Bot, EmailAccount, FillGrantInfo, FillSecretInfo, VaultKind } from "../api/types.ts";
 import { matchesQuery } from "./searchText.ts";
 import { isValidSecretName } from "./secretDetect.ts";
 
@@ -252,4 +252,46 @@ export function parseVaultCsv(csvText: string): VaultCsvParseResult {
   }
 
   return { format, rows, skipped };
+}
+
+export interface GrantGroup {
+  name: string;
+  item: FillSecretInfo | null;
+  label: string;
+  grants: FillGrantInfo[];
+}
+
+/** Group standing grants by entry; groups sort by site label, grants by origin. Unknown entries fall back to the raw name. */
+export function groupGrants(
+  grants: readonly FillGrantInfo[],
+  items: readonly FillSecretInfo[],
+): GrantGroup[] {
+  const byName = new Map(items.map((i) => [i.name, i]));
+  const groups = new Map<string, GrantGroup>();
+  for (const grant of grants) {
+    let group = groups.get(grant.secret);
+    if (!group) {
+      const item = byName.get(grant.secret) ?? null;
+      group = {
+        name: grant.secret,
+        item,
+        label: item ? siteLabelOf(item) : grant.secret,
+        grants: [],
+      };
+      groups.set(grant.secret, group);
+    }
+    group.grants.push(grant);
+  }
+  const out = [...groups.values()];
+  for (const group of out) group.grants.sort((a, b) => a.origin.localeCompare(b.origin));
+  return out.sort(
+    (a, b) =>
+      a.label.localeCompare(b.label, undefined, { sensitivity: "base" }) ||
+      a.name.localeCompare(b.name),
+  );
+}
+
+/** True when no other grant belongs to the same entry (revoking it turns "Ask before use" back on). */
+export function isLastGrant(grants: readonly FillGrantInfo[], grant: FillGrantInfo): boolean {
+  return !grants.some((g) => g.secret === grant.secret && g.id !== grant.id);
 }

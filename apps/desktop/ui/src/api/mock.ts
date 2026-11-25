@@ -63,6 +63,7 @@ import type {
   WorkspaceSettingsInput,
   WorkspacesOverviewDto,
   WorkspaceTrashEntryDto,
+  FillGrantInfo,
   FillSecretInfo,
   CreateFillSecretInput,
   UpdateFillSecretInput
@@ -931,6 +932,21 @@ export class MockApiClient extends ApiClient {
       value: "mock-stripe-key-00",
     },
   ];
+  /** Standing grants: one per allowed origin of every entry with "Ask before use" off. */
+  private fillGrants: FillGrantInfo[] = (() => {
+    let n = 0;
+    return this.fillSecrets.flatMap((s) =>
+      s.info.ask_before_use
+        ? []
+        : s.info.origins.map((origin) => ({
+            id: `grant-${++n}`,
+            secret: s.info.name,
+            origin,
+            created_at_ms: NOW - 5_000 * n,
+          })),
+    );
+  })();
+  private nextGrantId = 100;
   readonly doctorChecks: DoctorCheck[] = structuredClone(DOCTOR_CHECKS);
   spendLimit: number | null = null;
   mockEmbeddings: { providers: Array<Record<string, unknown>>; chains: Record<string, string[]> } = { providers: [], chains: {} };
@@ -1073,6 +1089,26 @@ export class MockApiClient extends ApiClient {
     string,
     Array<WorkspaceTrashEntryDto & { entry: { path: string; kind: "directory" | "file"; size_bytes: number; modified_at_ms: number; content?: string } }>
   >();
+
+  /** Mirror of the daemon's grant sync: ask on drops all grants, ask off keeps one per listed origin. */
+  private syncFillGrants(info: FillSecretInfo): void {
+    if (info.ask_before_use) {
+      this.fillGrants = this.fillGrants.filter((g) => g.secret !== info.name);
+      return;
+    }
+    this.fillGrants = this.fillGrants.filter(
+      (g) => g.secret !== info.name || info.origins.includes(g.origin),
+    );
+    for (const origin of info.origins) {
+      if (this.fillGrants.some((g) => g.secret === info.name && g.origin === origin)) continue;
+      this.fillGrants.push({
+        id: `grant-${this.nextGrantId++}`,
+        secret: info.name,
+        origin,
+        created_at_ms: Date.now(),
+      });
+    }
+  }
 
   constructor() {
     super({ base_url: MOCK_BASE_URL, token: "mock" });
@@ -2380,6 +2416,7 @@ export class MockApiClient extends ApiClient {
           updated_at_ms: Date.now(),
         };
         this.fillSecrets.push({ info, value: input.value });
+        this.syncFillGrants(info);
         return ok(structuredClone(info));
       }
       case "PUT /fill-secrets": {
@@ -2397,6 +2434,12 @@ export class MockApiClient extends ApiClient {
         if (patch.bot_ids !== undefined && patch.bot_ids !== null) hit.info.bot_ids = [...patch.bot_ids];
         if (patch.ask_before_use !== undefined && patch.ask_before_use !== null) hit.info.ask_before_use = patch.ask_before_use;
         hit.info.updated_at_ms = Date.now();
+        if (
+          (patch.ask_before_use !== undefined && patch.ask_before_use !== null) ||
+          (patch.origins !== undefined && patch.origins !== null)
+        ) {
+          this.syncFillGrants(hit.info);
+        }
         return ok(structuredClone(hit.info));
       }
       case "DELETE /fill-secrets": {
@@ -2404,6 +2447,20 @@ export class MockApiClient extends ApiClient {
         const idx = this.fillSecrets.findIndex((s) => s.info.name === name);
         if (idx < 0) throw new ApiError(404, "not_found", "secret not found");
         this.fillSecrets.splice(idx, 1);
+        this.fillGrants = this.fillGrants.filter((g) => g.secret !== name);
+        return ok(undefined);
+      }
+      case "GET /fill-grants":
+        return ok(structuredClone(this.fillGrants));
+      case "DELETE /fill-grants": {
+        const id = seg[1] ?? "";
+        const grant = this.fillGrants.find((g) => g.id === id);
+        if (!grant) throw new ApiError(404, "not_found", "fill grant not found");
+        this.fillGrants = this.fillGrants.filter((g) => g.id !== id);
+        if (!this.fillGrants.some((g) => g.secret === grant.secret)) {
+          const owner = this.fillSecrets.find((s) => s.info.name === grant.secret);
+          if (owner) owner.info.ask_before_use = true;
+        }
         return ok(undefined);
       }
       case "GET /profile-share":

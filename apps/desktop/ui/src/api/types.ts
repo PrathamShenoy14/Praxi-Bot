@@ -470,6 +470,7 @@ export type VaultKind = S["VaultKindDto"];
 export type CreateFillSecretInput = S["CreateFillSecret"];
 export type UpdateFillSecretInput = S["UpdateFillSecret"];
 export type RevealFillSecretResponse = S["RevealFillSecretResponse"];
+export type FillGrantInfo = S["FillGrantDto"];
 
 // ---- MCP management API (`/v1/mcp/*`, `/v1/secrets/*`) ---------------------
 
