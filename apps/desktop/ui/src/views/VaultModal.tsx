@@ -29,6 +29,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { BotAvatar, Button } from "ui";
+import { ApiError } from "../api/client";
 import type { EmailAccount, FillGrantInfo, FillSecretInfo, VaultKind } from "../api/types";
 import { BrandIcon } from "../components/BrandIcon";
 import { ConfirmDialog } from "../components/DialogParts";
@@ -216,6 +217,8 @@ export function VaultModal({
       setConfirmDelete(null);
       setConfirmRevoke(null);
       setNewMenuOpen(false);
+      setGrants([]);
+      setGrantsError(null);
       return;
     }
     setTab("all");
@@ -363,6 +366,9 @@ export function VaultModal({
   };
 
   const openGrants = () => {
+    clearRevealed();
+    wipeSecretInput();
+    setFormError(null);
     grantsReturn.current = mode.kind === "grants" ? grantsReturn.current : mode;
     setNewMenuOpen(false);
     setMode({ kind: "grants" });
@@ -379,7 +385,14 @@ export function VaultModal({
       await Promise.all([load(), loadGrants()]);
       toast.show(t("vault.grants.revoked"), "success");
     } catch (e) {
-      toast.show(humanLine(e), "danger");
+      if (e instanceof ApiError && e.status === 404) {
+        setConfirmRevoke(null);
+        await Promise.all([load(), loadGrants()]);
+        toast.show(t("vault.grants.revoked"), "success");
+      } else {
+        toast.show(humanLine(e), "danger");
+        void loadGrants();
+      }
     } finally {
       setRevokeBusy(null);
     }
@@ -726,7 +739,10 @@ export function VaultModal({
               }
               onBack={() => {
                 const back = grantsReturn.current;
-                setMode(back.kind === "grants" ? { kind: "empty" } : back);
+                const first: DrawerMode = items[0] ? { kind: "view", name: items[0].name } : { kind: "empty" };
+                const keep =
+                  back.kind === "view" ? items.some((i) => i.name === back.name) : back.kind !== "empty" && back.kind !== "grants";
+                setMode(keep ? back : first);
               }}
             />
           ) : mode.kind === "add" || mode.kind === "edit" ? (

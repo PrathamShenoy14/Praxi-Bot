@@ -2434,11 +2434,13 @@ export class MockApiClient extends ApiClient {
         if (patch.bot_ids !== undefined && patch.bot_ids !== null) hit.info.bot_ids = [...patch.bot_ids];
         if (patch.ask_before_use !== undefined && patch.ask_before_use !== null) hit.info.ask_before_use = patch.ask_before_use;
         hit.info.updated_at_ms = Date.now();
-        if (
-          (patch.ask_before_use !== undefined && patch.ask_before_use !== null) ||
-          (patch.origins !== undefined && patch.origins !== null)
-        ) {
+        if (patch.ask_before_use !== undefined && patch.ask_before_use !== null) {
           this.syncFillGrants(hit.info);
+        } else if (patch.origins !== undefined && patch.origins !== null) {
+          // Daemon parity: origins alone only prune grants, never add them.
+          this.fillGrants = this.fillGrants.filter(
+            (g) => g.secret !== hit.info.name || hit.info.origins.includes(g.origin),
+          );
         }
         return ok(structuredClone(hit.info));
       }

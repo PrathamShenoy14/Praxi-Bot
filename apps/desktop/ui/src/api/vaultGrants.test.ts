@@ -36,6 +36,7 @@ test("revoking a non-last grant keeps Ask before use off", async () => {
   const [seed] = await mock.listFillGrants();
   await mock.updateFillSecret(seed.secret, {
     origins: [seed.origin, "https://second.example"],
+    ask_before_use: false,
   });
   const grants = (await mock.listFillGrants()).filter((g) => g.secret === seed.secret);
   assert.equal(grants.length, 2);
@@ -64,15 +65,44 @@ test("toggling Ask before use creates one grant per origin and removes them", as
   assert.equal((await mock.listFillGrants()).filter((g) => g.secret === name).length, 0);
 });
 
-test("changing origins prunes and adds grants while Ask before use is off", async () => {
+test("changing origins only prunes grants when ask_before_use is not sent", async () => {
   const mock = new MockApiClient();
   const name = "login/linear";
+  const grantOrigins = async () =>
+    (await mock.listFillGrants()).filter((g) => g.secret === name).map((g) => g.origin);
   await mock.updateFillSecret(name, { origins: ["https://linear.app", "https://b.example"] });
-  let origins = (await mock.listFillGrants()).filter((g) => g.secret === name).map((g) => g.origin);
-  assert.deepEqual(origins.sort(), ["https://b.example", "https://linear.app"]);
+  assert.deepEqual(await grantOrigins(), ["https://linear.app"]);
   await mock.updateFillSecret(name, { origins: ["https://b.example"] });
-  origins = (await mock.listFillGrants()).filter((g) => g.secret === name).map((g) => g.origin);
-  assert.deepEqual(origins, ["https://b.example"]);
+  assert.deepEqual(await grantOrigins(), []);
+});
+
+test("new origins get grants only when ask_before_use: false is sent along", async () => {
+  const mock = new MockApiClient();
+  const name = "login/linear";
+  await mock.updateFillSecret(name, {
+    origins: ["https://linear.app", "https://b.example"],
+    ask_before_use: false,
+  });
+  const origins = (await mock.listFillGrants()).filter((g) => g.secret === name).map((g) => g.origin);
+  assert.deepEqual(origins.sort(), ["https://b.example", "https://linear.app"]);
+});
+
+test("ask off with zero origins leaves no grants and the flag stays false", async () => {
+  const mock = new MockApiClient();
+  const name = "login/linear";
+  await mock.updateFillSecret(name, { origins: [], ask_before_use: false });
+  assert.equal((await mock.listFillGrants()).filter((g) => g.secret === name).length, 0);
+  assert.equal(await askOf(mock, name), false);
+});
+
+test("revoking the last grant flips the flag even when other origins have no grant", async () => {
+  const mock = new MockApiClient();
+  const [seed] = await mock.listFillGrants();
+  await mock.updateFillSecret(seed.secret, { origins: [seed.origin, "https://nogrant.example"] });
+  const mine = (await mock.listFillGrants()).filter((g) => g.secret === seed.secret);
+  assert.equal(mine.length, 1);
+  await mock.revokeFillGrant(mine[0].id);
+  assert.equal(await askOf(mock, seed.secret), true);
 });
 
 test("deleting an entry removes its grants", async () => {
