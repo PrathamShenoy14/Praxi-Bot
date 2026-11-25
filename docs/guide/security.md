@@ -567,8 +567,8 @@ be treated as an upload sandbox.
 
 ## Secrets the assistant may type (fill secrets)
 
-A value is secret only if **you** stored it as one. Through the local API
-(`/v1/fill-secrets`; the Settings screen for it is a separate, later change) you store a credential under a name such as
+A value is secret only if **you** stored it as one. In the Vault screen of the
+desktop app (or through the local API, `/v1/fill-secrets`) you store a credential under a name such as
 `login/github` together with the exact web origins (scheme, host and port; no
 wildcards) it may be typed on, and, where the computer reports a verified
 program identity, the desktop programs it may be typed into. The assistant
@@ -589,6 +589,10 @@ with `secret: "login/github"` instead of `text` in `browser_fill`,
   grant you create for exactly "this secret on this origin"; it never covers
   another origin, another secret or a desktop program, and it does not waive the
   ask of a run that has read untrusted content (item 12): that card still appears.
+  Turning off "Ask before use" for a Vault item creates one such grant for each
+  origin it is allowed on. **Standing grants** in the Vault screen lists them all;
+  revoking one takes effect immediately (bots ask you again on that origin), and
+  revoking an item's last grant turns "Ask before use" back on.
 * The value is read only after you approve, held in memory, typed, and kept out
   of events, the journal, approvals, tool steps, model history, recordings, tool
   output and error text. If a page echoes it back, the redactor masks it.
