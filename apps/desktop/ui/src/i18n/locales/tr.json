@@ -7033,6 +7033,24 @@
       "siteLabel": "Site veya etiket",
       "sitePlaceholder": "GitHub, Notion, İş SSH…"
     },
+    "grants": {
+      "back": "Geri",
+      "confirmBody": "Botlar “{{name}}” öğesini {{origin}} üzerinde doldurmadan önce size sormak zorunda kalacak. Bu hemen geçerli olur.",
+      "confirmLastBody": "Botlar “{{name}}” öğesini {{origin}} üzerinde doldurmadan önce size sormak zorunda kalacak. Bu hemen geçerli olur. Bu, öğenin son kalıcı izni olduğu için “Kullanmadan önce sor” yeniden açılır.",
+      "confirmTitle": "Bu kalıcı izin iptal edilsin mi?",
+      "empty": "Kalıcı izin yok. Botlar herhangi bir kasa öğesini doldurmadan önce size sorar.",
+      "explainDoes": "Kalıcı izin, bir öğe için izin verdiğiniz botların onu her seferinde sormadan tam olarak tek bir web sitesinde doldurmasını sağlar. İzinler, o öğe için “Kullanmadan önce sor” kapalıyken geçerlidir.",
+      "explainDoesNot": "Kalıcı izin; başka web siteleri, başka bir siteden gömülen sayfalar, masaüstü programları, öğeye erişimi olmayan botlar ya da başka biri veya başka bir bot tarafından başlatılan çalıştırmaları asla kapsamaz. Bir çalıştırma güvenilmeyen içerik okuduktan sonra veriler bu bilgisayardan çıkmadan önce sorulan soruyu da asla atlamaz.",
+      "explainRevoke": "İptal hemen geçerli olur: botlar öğeyi o web sitesinde doldurmadan önce size yeniden sormak zorunda kalır.",
+      "listLabel": "Kasa öğesine göre kalıcı izinler",
+      "open": "Kalıcı izinler",
+      "revoke": "İptal et",
+      "revokeAria": "{{name}} için {{origin}} üzerindeki kalıcı izni iptal et",
+      "revoked": "Kalıcı izin iptal edildi",
+      "seeGrants": "Kalıcı izinleri gör",
+      "since": "{{date}} tarihinden beri",
+      "title": "Kalıcı izinler"
+    },
     "identity": {
       "label": "Bot kimlikleri",
       "manage": "Yönet",

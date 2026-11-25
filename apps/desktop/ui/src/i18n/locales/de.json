@@ -7033,6 +7033,24 @@
       "siteLabel": "Website oder Bezeichnung",
       "sitePlaceholder": "GitHub, Notion, Arbeit-SSH…"
     },
+    "grants": {
+      "back": "Zurück",
+      "confirmBody": "Bots müssen Sie fragen, bevor sie „{{name}}“ auf {{origin}} ausfüllen. Das wirkt sofort.",
+      "confirmLastBody": "Bots müssen Sie fragen, bevor sie „{{name}}“ auf {{origin}} ausfüllen. Das wirkt sofort. Es ist die letzte Dauerfreigabe des Eintrags, daher wird „Vor Verwendung fragen“ dafür wieder eingeschaltet.",
+      "confirmTitle": "Diese Dauerfreigabe widerrufen?",
+      "empty": "Keine Dauerfreigaben. Bots fragen Sie, bevor sie einen Tresor-Eintrag ausfüllen.",
+      "explainDoes": "Eine Dauerfreigabe erlaubt den Bots, die Sie für einen Eintrag zugelassen haben, ihn auf genau einer Website auszufüllen, ohne jedes Mal nachzufragen. Freigaben bestehen, solange „Vor Verwendung fragen“ für diesen Eintrag ausgeschaltet ist.",
+      "explainDoesNot": "Eine Freigabe gilt nie für andere Websites, von einer anderen Website eingebettete Seiten, Desktop-Programme, Bots ohne Zugriff auf den Eintrag oder Läufe, die von jemand anderem oder von einem anderen Bot gestartet wurden. Sie überspringt nie die Rückfrage, bevor Daten diesen Computer verlassen, nachdem ein Lauf nicht vertrauenswürdige Inhalte gelesen hat.",
+      "explainRevoke": "Das Widerrufen wirkt sofort: Bots müssen Sie erneut fragen, bevor sie den Eintrag auf dieser Website ausfüllen.",
+      "listLabel": "Dauerfreigaben nach Tresor-Eintrag",
+      "open": "Dauerfreigaben",
+      "revoke": "Widerrufen",
+      "revokeAria": "Dauerfreigabe für {{name}} auf {{origin}} widerrufen",
+      "revoked": "Dauerfreigabe widerrufen",
+      "seeGrants": "Dauerfreigaben anzeigen",
+      "since": "Seit {{date}}",
+      "title": "Dauerfreigaben"
+    },
     "identity": {
       "label": "Bot-Identitäten",
       "manage": "Verwalten",

@@ -46,6 +46,8 @@ const screens = [
   // Views opened by a few clicks/keys (act: click a selector, type into one, or press a key).
   { name: 'settings-search', expect: '[data-autofocus]', query: 'screen=settings&section=general', act: [{ type: ['[data-autofocus]', 'theme'] }] },
   { name: 'settings-search-empty', query: 'screen=settings&section=general', act: [{ type: ['[data-autofocus]', 'zzzqqq'] }] },
+  { name: 'vault-grants', expect: '[data-testid=vault-grants-panel]', scope: '[data-testid=vault-grants-panel]', query: 'screen=vault', act: [{ click: '[data-testid=vault-grants-open]' }] },
+  { name: 'vault-grants-revoke', expect: '[data-testid=confirm-dialog]', scope: '[data-testid=confirm-dialog]', query: 'screen=vault', act: [{ click: '[data-testid=vault-grants-open]' }, { click: '[data-testid^=vault-grant-revoke-]' }] },
   { name: 'help-dialog', expect: '[data-testid=help-center]', query: 'screen=home', act: [{ press: 'Shift+?' }] },
   { name: 'run-location-popover', expect: '[data-testid=home-status]', query: 'screen=home&menu=1' },
   { name: 'add-server-wizard', expect: '[data-testid=add-server-live]', query: 'screen=home&menu=1', act: [{ click: '[data-testid=computer-add]' }] },

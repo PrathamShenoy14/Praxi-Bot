@@ -7033,6 +7033,24 @@
       "siteLabel": "Site or label",
       "sitePlaceholder": "GitHub, Notion, Work SSH…"
     },
+    "grants": {
+      "back": "Back",
+      "confirmBody": "Bots will have to ask you before filling “{{name}}” on {{origin}}. This takes effect immediately.",
+      "confirmLastBody": "Bots will have to ask you before filling “{{name}}” on {{origin}}. This takes effect immediately. It is the item’s last standing grant, so “Ask before use” turns back on for it.",
+      "confirmTitle": "Revoke this standing grant?",
+      "empty": "No standing grants. Bots ask you before filling any vault item.",
+      "explainDoes": "A standing grant lets the bots you allowed on an item fill it on one exact website without asking you each time. Grants exist while “Ask before use” is off for that item.",
+      "explainDoesNot": "A grant never covers other websites, pages embedded from another website, desktop programs, bots without access to the item, or runs started by someone else or by another bot. It never skips the question before data leaves this computer after a run has read untrusted content.",
+      "explainRevoke": "Revoking takes effect immediately: bots will have to ask you again before filling the item on that website.",
+      "listLabel": "Standing grants by vault item",
+      "open": "Standing grants",
+      "revoke": "Revoke",
+      "revokeAria": "Revoke the standing grant for {{name}} on {{origin}}",
+      "revoked": "Standing grant revoked",
+      "seeGrants": "See standing grants",
+      "since": "Since {{date}}",
+      "title": "Standing grants"
+    },
     "identity": {
       "label": "Bot identities",
       "manage": "Manage",

@@ -7033,6 +7033,24 @@
       "siteLabel": "Sitio o etiqueta",
       "sitePlaceholder": "GitHub, Notion, SSH del trabajo…"
     },
+    "grants": {
+      "back": "Atrás",
+      "confirmBody": "Los bots tendrán que preguntarte antes de rellenar “{{name}}” en {{origin}}. Esto surte efecto de inmediato.",
+      "confirmLastBody": "Los bots tendrán que preguntarte antes de rellenar “{{name}}” en {{origin}}. Esto surte efecto de inmediato. Es el último permiso permanente del elemento, así que “Preguntar antes de usar” se vuelve a activar.",
+      "confirmTitle": "¿Revocar este permiso permanente?",
+      "empty": "No hay permisos permanentes. Los bots te preguntan antes de rellenar cualquier elemento de la bóveda.",
+      "explainDoes": "Un permiso permanente deja que los bots que autorizaste en un elemento lo rellenen en un sitio web exacto sin preguntarte cada vez. Los permisos existen mientras “Preguntar antes de usar” esté desactivado para ese elemento.",
+      "explainDoesNot": "Un permiso nunca cubre otros sitios web, páginas incrustadas desde otro sitio web, programas de escritorio, bots sin acceso al elemento ni ejecuciones iniciadas por otra persona o por otro bot. Nunca omite la pregunta antes de que los datos salgan de este equipo después de que una ejecución haya leído contenido no confiable.",
+      "explainRevoke": "Revocar surte efecto de inmediato: los bots tendrán que preguntarte de nuevo antes de rellenar el elemento en ese sitio web.",
+      "listLabel": "Permisos permanentes por elemento de la bóveda",
+      "open": "Permisos permanentes",
+      "revoke": "Revocar",
+      "revokeAria": "Revocar el permiso permanente de {{name}} en {{origin}}",
+      "revoked": "Permiso permanente revocado",
+      "seeGrants": "Ver permisos permanentes",
+      "since": "Desde {{date}}",
+      "title": "Permisos permanentes"
+    },
     "identity": {
       "label": "Identidades de bots",
       "manage": "Gestionar",
